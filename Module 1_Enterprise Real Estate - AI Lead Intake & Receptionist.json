@@ -1,0 +1,543 @@
+{
+  "name": "Enterprise Real Estate - AI Lead Intake & Receptionist",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2c74fd4e-fab8-4a87-9a61-24d63d862407",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6ef08a5c-4c44-4c5d-93cd-6abeeeae48d4",
+      "name": "Webhook",
+      "webhookId": "2c74fd4e-fab8-4a87-9a61-24d63d862407"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "19cd0397-2589-4e58-ade4-a7df1dc5b4d3",
+              "name": "name",
+              "value": "=({{ $json.body.name }})",
+              "type": "string"
+            },
+            {
+              "id": "015f35a6-f88d-4576-849a-8667765e6055",
+              "name": "email",
+              "value": "=({{ $json.body.email }})",
+              "type": "string"
+            },
+            {
+              "id": "181e2ef7-73a3-4366-9512-6ea5f236245d",
+              "name": "phone",
+              "value": "=({{ $json.body.phone }})",
+              "type": "string"
+            },
+            {
+              "id": "dde8129c-9bda-4f83-825a-24b84641e341",
+              "name": "source",
+              "value": "=({{ $json.body.source }})",
+              "type": "string"
+            },
+            {
+              "id": "154a8f83-048f-43f9-bede-7f7ab9e06aa3",
+              "name": "message",
+              "value": "=({{ $json.body.message }})",
+              "type": "string"
+            },
+            {
+              "id": "4c2b61f1-49e0-476e-983e-3458aba39f3d",
+              "name": "channel",
+              "value": "=({{ $json.body.channel }})",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "dc3e8562-3e0f-419b-b4a0-dc9ba5ed4f13",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an AI Real Estate Lead Intake Receptionist. Analyze the incoming user message and extract: lead_type (Buyer, Seller, Investor, Tenant, Landlord), budget, city, property_type, bedrooms, timeline, urgency. Output strictly valid JSON without any markdown formatting."
+            },
+            {
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "a85e0adc-fa03-4ace-aadd-aa654f6968d9",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const textResponse = $json.output[0].content[0].text;\nreturn JSON.parse(textResponse);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "7312da68-caff-40af-98fa-bd5371646057",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2dd67537-5354-404e-9fe5-187a27b6e7e0",
+              "name": "lead_type",
+              "value": "={{ $json.lead_type }}",
+              "type": "string"
+            },
+            {
+              "id": "cd60082f-2eff-4391-ad00-aaaf53f1bf92",
+              "name": "budget",
+              "value": "={{ $json.budget }}",
+              "type": "number"
+            },
+            {
+              "id": "3a2e4166-4cdd-4e81-8ee4-710ab542a454",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "df3e4bbb-2ec9-4afb-b199-66fa2614f407",
+              "name": "property_type",
+              "value": "={{ $json.property_type }}",
+              "type": "string"
+            },
+            {
+              "id": "ea0007b8-1df2-445b-a3f5-eae7f8684701",
+              "name": "bedrooms",
+              "value": "={{ $json.bedrooms }}",
+              "type": "number"
+            },
+            {
+              "id": "9020936e-ef59-443e-a3c8-e25a3c8aced2",
+              "name": "timeline",
+              "value": "={{ $json.timeline }}",
+              "type": "string"
+            },
+            {
+              "id": "dca2bc5f-17c9-46dc-b383-00ce6c5dfacf",
+              "name": "urgency",
+              "value": "={{ $json.urgency }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "652ef547-d15c-4ceb-9b2a-bf76c93a03f5",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d9cc45cd-5516-4b6d-82da-d3ec16fad0ad",
+              "leftValue": "={{ $json.lead_type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "51cf320d-67b7-4f1d-b58a-d028d5761f06",
+              "leftValue": "={{ $json.city }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "14de1455-9707-4d88-a112-2feb893716f9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Buyer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c8e0b6fc-36c4-4352-af28-48c8dbee310b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Buyer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "52586ba5-45ae-4828-ac6b-cf5c4de3466f",
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Seller",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Seller"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a9255e4e-1105-4d4b-a1dd-8797adf0192e",
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Investor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Investor"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0302a94c-ef71-4e6d-bdc6-0db899442bbc",
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Tenant",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tenant"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7a8dd388-2d18-47cb-bae2-848585878d1a",
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Landlord",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Landlord"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        -96
+      ],
+      "id": "aa039950-98bf-4b66-885a-a707bcfe901c",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are a helpful real estate receptionist. The user provided incomplete details. Politely ask them to provide their target city and budget."
+            },
+            {
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1488,
+        96
+      ],
+      "id": "f6b6df7f-6eb3-41a8-96b4-8da551f8a3be",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1856,
+        96
+      ],
+      "id": "a81ed9f9-4055-4e01-9b77-bfa3ebf6664f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1712,
+        -320
+      ],
+      "id": "0f4c1e5b-15c6-40d2-a246-c3ed5f1eed50",
+      "name": "Execute Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0186c2d4-b998-4974-b90b-70842f1565d7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "cPFxzPj9t9uTfdEd",
+  "tags": []
+}

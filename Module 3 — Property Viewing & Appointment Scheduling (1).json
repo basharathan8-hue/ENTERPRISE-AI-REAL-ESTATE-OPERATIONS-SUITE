@@ -1,0 +1,502 @@
+{
+  "name": "Module 3 — Property Viewing & Appointment Scheduling",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dc4f8946-1f22-4bad-bbcb-51f377ed7383",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f0a4afeb-aa14-465f-9543-676d3b3f7467",
+              "name": "customer_name",
+              "value": "={{ $json.customer_name || 'Valued Client' }}",
+              "type": "string"
+            },
+            {
+              "id": "fcf72f75-e0fe-481d-adcd-bd11a9d7e74f",
+              "name": "preferred_date",
+              "value": "={{ $json.preferred_date || '2026-08-12' }}",
+              "type": "string"
+            },
+            {
+              "id": "ac24be2a-3f9c-4ff7-bc79-27bee9bbbe4e",
+              "name": "preferred_time",
+              "value": "={{ $json.preferred_time || '15:00' }}",
+              "type": "string"
+            },
+            {
+              "id": "62933058-5cf9-4380-8b2c-9f42b292077f",
+              "name": "property_title",
+              "value": "={{ $json.title || 'Executive Family Villa' }}",
+              "type": "string"
+            },
+            {
+              "id": "46bd6f85-db83-4b26-8dba-b64d27740f31",
+              "name": "viewing_type",
+              "value": "={{ $json.viewing_type || 'Physical Visit' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d11fa9d1-f7ba-42bd-b13c-aca8434d999b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\n\n// Sanitize & Format Booking Request\nconst bookingData = {\n  customer_name: input.customer_name || \"Client\",\n  property_title: input.property_title || \"Luxury Property\",\n  requested_date: input.preferred_date,\n  requested_time: input.preferred_time,\n  viewing_type: input.viewing_type || \"Physical Visit\",\n  assigned_agent: \"Sarah Johnson\",\n  is_valid_date: true\n};\n\nreturn { json: bookingData };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "52fb993c-0dac-434c-8b92-c94eb37ea8e8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "\"You are an AI Real Estate Appointment Coordinator. Process the user's date, time, and property preferences. Generate a valid JSON output with keys: 'assigned_agent', 'slot_available' (boolean), 'formatted_slot', and 'notes'.\""
+            },
+            {
+              "content": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "e9b4856b-ddb7-4cce-a747-536b27ef367d",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = $json.output[0].content[0].text;\ntext = text.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(text);\n} catch(e) {\n  parsed = { slot_available: true, assigned_agent: \"Sarah Johnson\", formatted_slot: \"12 August 2026 at 3:00 PM\" };\n}\n\n// Fallback logic for demo\nif (parsed.slot_available === undefined) {\n  parsed.slot_available = true;\n}\n\nreturn { json: parsed };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "cedbbf51-5ab6-4941-b81a-8fc77826b7d4",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d6103dce-93ce-4fa6-a3b5-786a93e3cd92",
+              "leftValue": "={{ $json.slot_available }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        16
+      ],
+      "id": "01c40bd3-fe33-4ebd-90f8-4b32566c702a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1fb0bcd-202a-43c2-85a0-c9b400418696",
+              "name": "status",
+              "value": "Confirmed",
+              "type": "string"
+            },
+            {
+              "id": "fd533832-4e7e-4dc2-97ab-ac6f6513cc61",
+              "name": "booking_details",
+              "value": "={{ $json.formatted_slot }}",
+              "type": "string"
+            },
+            {
+              "id": "b0af7614-1608-499a-997d-385e86b69f6c",
+              "name": "agent_assigned",
+              "value": "={{ $json.assigned_agent || 'Sarah Johnson' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1424,
+        -80
+      ],
+      "id": "6398d4ef-896b-4cc6-8407-eaedbdf76920",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "\"Suggest 3 alternative viewing slots for the property.\""
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1424,
+        112
+      ],
+      "id": "e2f60e18-bfdb-4fbc-875b-7b2c90744a02",
+      "name": "Message a model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "568fbe2a-0734-4d99-831b-c2907d80d151",
+              "name": "booking_status",
+              "value": "Confirmed",
+              "type": "string"
+            },
+            {
+              "id": "806bfc3a-8844-4f09-862b-14fe5bd08967",
+              "name": "calendar_event_id",
+              "value": "EVT-2026-9982",
+              "type": "string"
+            },
+            {
+              "id": "15f0e86b-d621-4d73-b597-5f1a72a34dac",
+              "name": "crm_action",
+              "value": "Appointment Scheduled",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1648,
+        -80
+      ],
+      "id": "ff444770-db49-49c7-a241-27b35584c5ce",
+      "name": "Mock CRM Update"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2429c58f-02d9-4499-b0e4-9f2f307c8bf0",
+              "name": "email_subject",
+              "value": "Viewing Confirmed: Luxury Villa – Downtown",
+              "type": "string"
+            },
+            {
+              "id": "80ac9d4b-d812-4c49-b0df-14c20dab2d5d",
+              "name": "email_body",
+              "value": "Hi John, Your viewing is set for 12 August 2026 at 3:00 PM with Agent Sarah Johnson.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1872,
+        -80
+      ],
+      "id": "66cb1f9c-8723-40a6-8eef-43a3f718f526",
+      "name": "Gmail Confirmation"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "14242472-2dc1-46c1-b758-823ae3ad83cb",
+              "name": "slack_channel",
+              "value": "#sales-appointments",
+              "type": "string"
+            },
+            {
+              "id": "06600418-9a14-428d-be5f-1bb4681e91af",
+              "name": "slack_message",
+              "value": "🚨 New Property Viewing Scheduled with John Smith!",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2096,
+        -80
+      ],
+      "id": "122bad52-0597-4b22-bed5-d6cc5d254208",
+      "name": "Slack Agent Alert"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Q9GOqzDuP8hPx7zw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Q9GOqzDuP8hPx7zw",
+          "cachedResultName": "Module 4 — CRM & Lead Pipeline Management"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2320,
+        -80
+      ],
+      "id": "e7f4f131-ab10-4bcd-b796-f158fa26ee54",
+      "name": "Call 'Module 4 — CRM & Lead Pipeline Management'"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "customer_name": "Basharat",
+          "property_title": "Executive Family Villa",
+          "preferred_date": "2026-08-12",
+          "preferred_time": "15:00",
+          "viewing_type": "Physical Visit"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Mock CRM Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock CRM Update": {
+      "main": [
+        [
+          {
+            "node": "Gmail Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Slack Agent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Agent Alert": {
+      "main": [
+        [
+          {
+            "node": "Call 'Module 4 — CRM & Lead Pipeline Management'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "dd045209-596a-4235-a383-0f5990282515",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "N0hXsDb8ogeNuP2u",
+  "tags": []
+}

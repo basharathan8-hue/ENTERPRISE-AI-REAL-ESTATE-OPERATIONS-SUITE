@@ -1,0 +1,423 @@
+{
+  "name": "MODULE 9 — Analytics & Business Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dec4f020-c3a8-470e-aef7-eefcad035723",
+      "name": "Analytics Input"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"report_period\": \"={{ $json.report_period || 'August 2026' }}\",\n  \"total_leads\": \"={{ $json.total_leads || 250 }}\",\n  \"qualified_leads\": \"={{ $json.qualified_leads || 142 }}\",\n  \"viewings_scheduled\": \"={{ $json.viewings_scheduled || 96 }}\",\n  \"viewings_completed\": \"={{ $json.viewings_completed || 78 }}\",\n  \"offers_received\": \"={{ $json.offers_received || 31 }}\",\n  \"offers_accepted\": \"={{ $json.offers_accepted || 18 }}\",\n  \"deals_closed\": \"={{ $json.deals_closed || 14 }}\",\n  \"total_pipeline_value\": \"={{ $json.total_pipeline_value || 4250000 }}\",\n  \"total_closed_value\": \"={{ $json.total_closed_value || 1850000 }}\",\n  \"avg_response_time_minutes\": \"={{ $json.avg_response_time_minutes || 7 }}\",\n  \"follow_up_completion_rate\": \"={{ $json.follow_up_completion_rate || 91 }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c672b172-77d4-422d-8971-cb9d371bbba9",
+      "name": "Normalize Analytics Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst total_leads = Number(input.total_leads) || 1;\nconst qualified_leads = Number(input.qualified_leads) || 0;\nconst viewings_completed = Number(input.viewings_completed) || 0;\nconst offers_received = Number(input.offers_received) || 1;\nconst offers_accepted = Number(input.offers_accepted) || 0;\nconst deals_closed = Number(input.deals_closed) || 1;\nconst total_closed_value = Number(input.total_closed_value) || 0;\n\nconst qualification_rate = parseFloat(((qualified_leads / total_leads) * 100).toFixed(2));\nconst viewing_conversion_rate = parseFloat(((viewings_completed / (qualified_leads || 1)) * 100).toFixed(2));\nconst offer_acceptance_rate = parseFloat(((offers_accepted / offers_received) * 100).toFixed(2));\nconst deal_conversion_rate = parseFloat(((deals_closed / total_leads) * 100).toFixed(2));\nconst average_deal_value = parseFloat((total_closed_value / deals_closed).toFixed(2));\n\nreturn {\n  json: {\n    ...input,\n    qualification_rate,\n    viewing_conversion_rate,\n    offer_acceptance_rate,\n    deal_conversion_rate,\n    average_deal_value,\n    pipeline_value: Number(input.total_pipeline_value) || 0,\n    closed_value: total_closed_value,\n    average_response_time: Number(input.avg_response_time_minutes) || 0,\n    follow_up_completion_rate: Number(input.follow_up_completion_rate) || 0\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "9d8b875e-5e15-4aaf-97e7-cf1931c5b668",
+      "name": "Calculate Core KPIs"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nlet score = 0;\n\n// 1. Lead Quality (Max 20 points)\nif (input.qualification_rate >= 50) score += 20;\nelse if (input.qualification_rate >= 35) score += 12;\nelse score += 5;\n\n// 2. Conversion (Max 20 points)\nif (input.deal_conversion_rate >= 5) score += 20;\nelse if (input.deal_conversion_rate >= 3) score += 12;\nelse score += 5;\n\n// 3. Response Speed (Max 20 points)\nif (input.average_response_time <= 10) score += 20;\nelse if (input.average_response_time <= 30) score += 12;\nelse score += 5;\n\n// 4. Follow-up (Max 20 points)\nif (input.follow_up_completion_rate >= 90) score += 20;\nelse if (input.follow_up_completion_rate >= 75) score += 12;\nelse score += 5;\n\n// 5. Deal Performance / Offer Acceptance (Max 20 points)\nif (input.offer_acceptance_rate >= 50) score += 20;\nelse if (input.offer_acceptance_rate >= 35) score += 12;\nelse score += 5;\n\nlet health_status = \"CRITICAL\";\nif (score >= 80) {\n  health_status = \"HEALTHY\";\n} else if (score >= 60) {\n  health_status = \"NEEDS ATTENTION\";\n}\n\nreturn {\n  json: {\n    ...input,\n    business_health_score: score,\n    business_health: health_status\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "6ac6c498-a95e-4384-b029-a9a502db8176",
+      "name": "Calculate Business Health Score"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ba3482aa-70ee-480e-880c-b707f86a2a8c",
+              "leftValue": "=={{ $json.business_health_score }}",
+              "rightValue": "80",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        0
+      ],
+      "id": "61309352-ce45-4c6c-9c42-d486cd91c5e5",
+      "name": "Business Health Check"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"HEALTHY\",\n  \"priority\": \"LOW\",\n  \"action_required\": false,\n  \"risks\": [],\n  \"recommended_actions\": [\n    \"Maintain current response and follow-up standards\",\n    \"Scale lead acquisition channels\"\n  ]\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        -112
+      ],
+      "id": "d5793b95-0bba-4e66-9973-77354a7f8334",
+      "name": "Healthy Performance"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst risks = [];\n\nif (input.qualification_rate < 50) {\n  risks.push(\"Low lead qualification rate\");\n}\nif (input.average_response_time > 10) {\n  risks.push(\"Response time above target\");\n}\nif (input.viewing_conversion_rate < 70) {\n  risks.push(\"Low viewing conversion rate\");\n}\nif (input.offer_acceptance_rate < 50) {\n  risks.push(\"Offer acceptance rate needs improvement\");\n}\nif (input.follow_up_completion_rate < 85) {\n  risks.push(\"Follow-up completion rate low\");\n}\nif (input.deal_conversion_rate < 5) {\n  risks.push(\"Low overall deal conversion rate\");\n}\n\nreturn {\n  json: {\n    ...input,\n    risks: risks.length > 0 ? risks : [\"General operational inefficiency detected\"]\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        96
+      ],
+      "id": "477ac442-32b3-4347-b5cd-399c097529bf",
+      "name": "Identify Performance Risks"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"priority\": \"HIGH\",\n  \"action_required\": true,\n  \"recommended_actions\": [\n    \"Improve lead response speed and initial screening\",\n    \"Review and automate follow-up sequences\",\n    \"Analyze rejected offers to improve pricing accuracy\"\n  ]\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1264,
+        96
+      ],
+      "id": "89c7e25b-33b7-4792-ad37-23352efe73db",
+      "name": "Generate Action Plan"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1392,
+        -96
+      ],
+      "id": "e41869d7-892b-40a8-bc85-802f6ba9e22c",
+      "name": "Combine Analytics Result"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nreturn {\n  json: {\n    report_period: input.report_period || \"August 2026\",\n    business_health_score: input.business_health_score,\n    business_health: input.business_health,\n    metrics: {\n      total_leads: input.total_leads,\n      qualified_leads: input.qualified_leads,\n      qualification_rate: input.qualification_rate,\n      viewings_scheduled: input.viewings_scheduled,\n      viewings_completed: input.viewings_completed,\n      viewing_conversion_rate: input.viewing_conversion_rate,\n      offers_received: input.offers_received,\n      offers_accepted: input.offers_accepted,\n      offer_acceptance_rate: input.offer_acceptance_rate,\n      deals_closed: input.deals_closed,\n      deal_conversion_rate: input.deal_conversion_rate,\n      pipeline_value: input.pipeline_value,\n      closed_value: input.closed_value,\n      average_deal_value: input.average_deal_value,\n      average_response_time: input.average_response_time,\n      follow_up_completion_rate: input.follow_up_completion_rate\n    },\n    risk_assessment: {\n      status: input.status || (input.business_health === \"HEALTHY\" ? \"HEALTHY\" : \"NEEDS_ATTENTION\"),\n      priority: input.priority || \"LOW\",\n      action_required: input.action_required ?? false,\n      risks: input.risks || [],\n      recommended_actions: input.recommended_actions || []\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -96
+      ],
+      "id": "c295a6cc-9c71-4303-95c5-fcd2bd2e6304",
+      "name": "Build Executive Dashboard Payload"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst m = input.metrics;\n\nconst pipelineFormatted = `$${(m.pipeline_value / 1000000).toFixed(2)}M`;\nconst closedFormatted = `$${(m.closed_value / 1000000).toFixed(2)}M`;\n\nconst summary = `Real estate operations processed ${m.total_leads} leads during ${input.report_period}. ${m.qualified_leads} leads qualified, generating ${m.viewings_completed} completed viewings and ${m.deals_closed} closed deals. Pipeline value reached ${pipelineFormatted} with ${closedFormatted} in closed value. Overall business health score is ${input.business_health_score} (${input.business_health}).`;\n\nreturn {\n  json: {\n    ...input,\n    executive_summary: summary\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -96
+      ],
+      "id": "5efec43f-f21e-49a6-a3dd-3832a677303b",
+      "name": "Generate Executive Summary"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f2e3a431-db46-4faa-aae6-7a645dbf3938",
+              "name": "dashboard_status",
+              "value": "READY",
+              "type": "string"
+            },
+            {
+              "id": "ce329dae-af2b-4710-8aec-bf6bf1ec2c74",
+              "name": "executive_summary",
+              "value": "=={{ $json.executive_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "5c6b1394-9ab1-49b4-a97d-5a8901a0b5e4",
+              "name": "kpis",
+              "value": "=={{ $json.metrics }}",
+              "type": "string"
+            },
+            {
+              "id": "005582a0-7488-469e-becf-a190eec1fd10",
+              "name": "business_health",
+              "value": "=={{ { score: $json.business_health_score, status: $json.business_health } }}",
+              "type": "string"
+            },
+            {
+              "id": "a241ea89-16cf-4028-9201-b4dfd76e0d3a",
+              "name": "risks",
+              "value": "=={{ $json.risk_assessment ? $json.risk_assessment.risks : $json.risks }}",
+              "type": "string"
+            },
+            {
+              "id": "a86ed23a-0d73-48af-a9dd-0a1c3269b205",
+              "name": "recommended_actions",
+              "value": "=={{ $json.risk_assessment ? $json.risk_assessment.recommended_actions : $json.recommended_actions }}",
+              "type": "string"
+            },
+            {
+              "id": "24c24db0-2e57-43f8-8773-22e0cf80c58d",
+              "name": "report_period",
+              "value": "=={{ $json.report_period }}",
+              "type": "string"
+            },
+            {
+              "id": "e3d8bba7-376b-4f22-87ca-1bee39c41abe",
+              "name": "generated_at",
+              "value": "=={{ $now.toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2064,
+        -96
+      ],
+      "id": "476d9958-8a0c-4834-873c-dcdf12b6599b",
+      "name": "Final Analytics Report"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"module\": \"Analytics & Business Dashboard\",\n  \"status\": \"completed\",\n  \"report_period\": \"={{ $json.report_period }}\",\n  \"business_health_score\": \"={{ $json.business_health.score }}\",\n  \"business_health\": \"={{ $json.business_health.status }}\",\n  \"kpis\": \"={{ $json.kpis }}\",\n  \"risks\": \"={{ $json.risks }}\",\n  \"recommended_actions\": \"={{ $json.recommended_actions }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2288,
+        -96
+      ],
+      "id": "b75d675f-1615-422d-8d92-5f2a60ea5556",
+      "name": "Return Sub-workflow Payload"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        -96
+      ],
+      "id": "695e23e5-cf8c-474e-8b27-ab4cc671d63f",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Analytics Input": {
+      "main": [
+        [
+          {
+            "node": "Normalize Analytics Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Analytics Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Core KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Core KPIs": {
+      "main": [
+        [
+          {
+            "node": "Calculate Business Health Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Business Health Score": {
+      "main": [
+        [
+          {
+            "node": "Business Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Health Check": {
+      "main": [
+        [
+          {
+            "node": "Healthy Performance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Identify Performance Risks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Performance Risks": {
+      "main": [
+        [
+          {
+            "node": "Generate Action Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Healthy Performance": {
+      "main": [
+        [
+          {
+            "node": "Combine Analytics Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Action Plan": {
+      "main": [
+        [
+          {
+            "node": "Combine Analytics Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combine Analytics Result": {
+      "main": [
+        [
+          {
+            "node": "Build Executive Dashboard Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Executive Dashboard Payload": {
+      "main": [
+        [
+          {
+            "node": "Generate Executive Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Executive Summary": {
+      "main": [
+        [
+          {
+            "node": "Final Analytics Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Analytics Report": {
+      "main": [
+        [
+          {
+            "node": "Return Sub-workflow Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "08f8a636-3ad0-439a-a7cb-b7b54987ba5c",
+  "meta": {
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "nVEKXbJVwprMPStI",
+  "tags": []
+}

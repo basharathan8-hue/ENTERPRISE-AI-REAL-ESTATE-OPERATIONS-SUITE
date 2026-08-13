@@ -1,0 +1,1093 @@
+{
+  "name": "MODULE 7 — OFFER & NEGOTIATION MANAGEMENT",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "=offer-received",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "27e726d5-00ab-4e23-853f-d2ca98c16560",
+      "name": "Offer Received",
+      "webhookId": "487b0d04-4ba3-454c-bd3f-ce9af79695e0"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "368038fe-c106-4696-8ac0-6b8ac63ef41b",
+              "name": "offer_id",
+              "value": "=={{ $json.body.offer_id || \"OFF-1001\" }}",
+              "type": "string"
+            },
+            {
+              "id": "45e42567-0e6a-49b3-8700-fec85d50a50d",
+              "name": "buyer_id",
+              "value": "=={{ $json.body.buyer_id || \"BUY-2001\" }}",
+              "type": "string"
+            },
+            {
+              "id": "1135e312-9afd-4067-8b84-fa0c9f885fef",
+              "name": "buyer_name",
+              "value": "=={{ $json.body.buyer_name || \"John Smith\" }}",
+              "type": "string"
+            },
+            {
+              "id": "d612d09c-4fc1-4667-bb75-a2f73beb4ac8",
+              "name": "buyer_email",
+              "value": "=={{ $json.body.buyer_email || \"john@example.com\" }}",
+              "type": "string"
+            },
+            {
+              "id": "49049541-fb4c-468e-a8d7-753c87fa935e",
+              "name": "property_id",
+              "value": "=={{ $json.body.property_id || \"PROP-301\" }}",
+              "type": "string"
+            },
+            {
+              "id": "da5576ad-d361-4657-b9a9-6a2f75ca2a28",
+              "name": "property_address",
+              "value": "=={{ $json.body.property_address || \"123 Main Street\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ba461416-380a-4b2e-982e-b50a37164d3b",
+              "name": "asking_price",
+              "value": "=={{ $json.body.asking_price || 500000 }}",
+              "type": "string"
+            },
+            {
+              "id": "6dd92a00-d6c3-43b3-89ea-de4b849093ec",
+              "name": "offer_amount",
+              "value": "=={{ $json.body.offer_amount || 475000 }}",
+              "type": "string"
+            },
+            {
+              "id": "f36ee85e-01bd-4e14-b982-fedbefd1e7d6",
+              "name": "financing_type",
+              "value": "=={{ $json.body.financing_type || \"Mortgage\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cbea6a94-354f-4abf-9314-14e13ffc1e8b",
+              "name": "contingencies",
+              "value": "=={{ $json.body.contingencies || [\"Inspection\", \"Financing\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "412cb6d3-7972-4cf1-b8c7-1a60f3b55ba7",
+              "name": "closing_preference",
+              "value": "=={{ $json.body.closing_preference || \"30 days\" }}",
+              "type": "string"
+            },
+            {
+              "id": "b7b60665-3ee7-4b7d-a1b6-e81cd8b1fb97",
+              "name": "agent_id",
+              "value": "=={{ $json.body.agent_id || \"AGENT-101\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "07d8d94e-e1a2-4f42-8674-40181deccb09",
+      "name": "Normalize Offer Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $json;\n\n// Check inside body or root level\nconst o = inputData.body ? inputData.body : inputData;\n\nconst missing = [];\n\nif (!o.offer_id) missing.push(\"offer_id\");\nif (!o.buyer_id) missing.push(\"buyer_id\");\nif (!o.property_id) missing.push(\"property_id\");\nif (!o.asking_price) missing.push(\"asking_price\");\nif (!o.offer_amount) missing.push(\"offer_amount\");\nif (!o.agent_id) missing.push(\"agent_id\");\n\n// Output clean data\nreturn {\n  json: {\n    offer_id: o.offer_id || \"OFF-1001\",\n    buyer_id: o.buyer_id || \"BUY-2001\",\n    buyer_name: o.buyer_name || \"John Smith\",\n    buyer_email: o.buyer_email || \"john@example.com\",\n    property_id: o.property_id || \"PROP-301\",\n    property_address: o.property_address || \"123 Main Street\",\n    asking_price: Number(o.asking_price || 500000),\n    offer_amount: Number(o.offer_amount || 475000),\n    financing_type: o.financing_type || \"Mortgage\",\n    contingencies: o.contingencies || [\"Inspection\"],\n    closing_preference: o.closing_preference || \"30 days\",\n    agent_id: o.agent_id || \"AGENT-101\",\n    validation_status: missing.length === 0 ? \"complete\" : \"incomplete\",\n    missing_fields: missing\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "0a0d5d6d-454c-427e-b8b7-429235264b87",
+      "name": "Validate Offer Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30e1208b-20ee-415b-81c3-b755d9510437",
+              "leftValue": "=={{ $json.validation_status.trim() }}",
+              "rightValue": "complete",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "712717e1-732e-4270-9bcc-41860bc1f878",
+      "name": "Offer Data Complete?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95da1ba4-db75-45ff-887c-cc7aeb47c285",
+              "name": "status",
+              "value": "incomplete",
+              "type": "string"
+            },
+            {
+              "id": "20712a1d-ee1c-48f9-a9de-0f231d848e53",
+              "name": "action",
+              "value": "agent_review",
+              "type": "string"
+            },
+            {
+              "id": "48d4e8a7-7a6c-46b9-ac1c-9481d47e071d",
+              "name": "missing_fields",
+              "value": "=={{ $json.missing_fields }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        864,
+        96
+      ],
+      "id": "8ab9eef1-ea26-48c6-90e4-ba303e50d993",
+      "name": "Missing Offer Information"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cda224b0-5dc7-4bd6-921e-fd6cfc1f5fe1",
+              "name": "slack_channel",
+              "value": "#agent-alerts",
+              "type": "string"
+            },
+            {
+              "id": "6b4f653e-7117-4f88-809f-ed117c42c44a",
+              "name": "message",
+              "value": "⚠️ Offer cannot be processed because required information is missing. Agent review required.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        128
+      ],
+      "id": "d6a84598-f3d9-4d17-829b-67adc181ee78",
+      "name": "Notify Agent - Missing Offer Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an AI Real Estate Negotiation & Deal Strategy Engine.\nAnalyze the incoming buyer offer against property asking details and return ONLY valid JSON.\n\nCalculate and determine:\n- offer_strength (strong, competitive, weak, high_risk)\n- price_difference (Percentage difference between asking and offer)\n- financing_risk (low, medium, high)\n- contingency_risk (low, medium, high)\n- timeline_assessment (acceptable, tight, extended)\n- negotiation_priority (low, medium, high)\n- recommended_action (accept, counter, reject)\n- reasoning (Brief string)\n\nReturn JSON only."
+            },
+            {
+              "content": "=={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        -208
+      ],
+      "id": "db88d443-ca5d-46cb-8cc9-330bf8dbee68",
+      "name": "AI Offer Analysis",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = $json.output?.[0]?.content?.[0]?.text || \"{}\";\ntext = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\nlet result;\ntry {\n  result = JSON.parse(text);\n} catch (error) {\n  result = {\n    offer_strength: \"competitive\",\n    price_difference: \"-5%\",\n    financing_risk: \"medium\",\n    contingency_risk: \"low\",\n    timeline_assessment: \"acceptable\",\n    negotiation_priority: \"medium\",\n    recommended_action: \"counter\",\n    reasoning: \"Offer is 5% below asking price, counter-offer recommended.\"\n  };\n}\n\nconst originalData = $('Validate Offer Data').first().json;\nreturn { json: { ...originalData, ...result } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        -32
+      ],
+      "id": "7b39e2dc-0c4f-416d-898e-fc15ba529ff4",
+      "name": "Parse AI Offer Analysis"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "=={{ $json.offer_strength }}",
+                    "rightValue": "strong",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e51bbca0-bf40-440f-8bbf-9b4c597ec03a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "strong"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "50633e7e-26dc-42fa-995a-8b8caec021da",
+                    "leftValue": "=={{ $json.offer_strength }}",
+                    "rightValue": "competitive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "competitive"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fec1779c-1699-4b6d-a01d-383dd1378d53",
+                    "leftValue": "=={{ $json.offer_strength }}",
+                    "rightValue": "weak",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "weak"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4625de85-2473-4f36-b510-f439e198afa2",
+                    "leftValue": "=={{ $json.offer_strength }}",
+                    "rightValue": "high_risk",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "high_risk"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        -64
+      ],
+      "id": "1b107143-1348-4db2-8287-390efca0305a",
+      "name": "Classify Offer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31afe76a-23c9-4132-aa84-2b0ca254c23d",
+              "name": "review_required",
+              "value": "true",
+              "type": "string"
+            },
+            {
+              "id": "1ad2d07a-ad80-407e-a7fe-804c6f3da56c",
+              "name": "decision_owner",
+              "value": "agent",
+              "type": "string"
+            },
+            {
+              "id": "465950c6-9c00-4c7a-bc19-67551dac8e03",
+              "name": "status",
+              "value": "pending_agent_decision",
+              "type": "string"
+            },
+            {
+              "id": "604c6a0c-e17f-41ef-8afe-7fcaae05b110",
+              "name": "agent_decision",
+              "value": "=={{ $json.recommended_action || \"counter\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        -48
+      ],
+      "id": "df732044-ba16-4a38-856e-3acad34bb65c",
+      "name": "Human Negotiation Review"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "=={{ $json.agent_decision }}",
+                    "rightValue": "accept",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0b975490-8c30-4572-8b38-3a23b7b62533"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "accept"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "338338a4-7fde-44ad-be70-c590eb534798",
+                    "leftValue": "=={{ $json.agent_decision }}",
+                    "rightValue": "counter",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "counter"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cd00eeca-2c47-4655-8c5f-36998af06ac4",
+                    "leftValue": "=={{ $json.agent_decision }}",
+                    "rightValue": "reject",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reject"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        -272
+      ],
+      "id": "61cc59fc-5b3a-48bd-acff-c87aab53bf03",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ad06e3e8-6d3f-4f06-9e17-b884e502e311",
+              "name": "offer_status",
+              "value": "accepted",
+              "type": "string"
+            },
+            {
+              "id": "6141be0c-ce51-4482-8a27-4998c2411d64",
+              "name": "transaction_stage",
+              "value": "under_contract",
+              "type": "string"
+            },
+            {
+              "id": "cde70eb8-3142-4535-b28f-4e9add033162",
+              "name": "property_status",
+              "value": "under_contract",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1776,
+        -400
+      ],
+      "id": "bd1cf99f-82f3-4cef-95cc-54b1d43967c2",
+      "name": "Offer Accepted"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5c73cfdf-e78a-4ed6-98c7-ed2a58cd6edf",
+              "name": "offer_status",
+              "value": "countered",
+              "type": "string"
+            },
+            {
+              "id": "5195c923-e2a4-49e7-995f-a99ff2210097",
+              "name": "counter_offer_amount",
+              "value": "=={{ $json.asking_price - 10000 }}",
+              "type": "string"
+            },
+            {
+              "id": "baa0fb8f-c0f3-46f3-badb-eff5d03606bb",
+              "name": "negotiation_status",
+              "value": "active",
+              "type": "string"
+            },
+            {
+              "id": "1a14e646-7b22-432f-8413-831ae9f32111",
+              "name": "property_status",
+              "value": "negotiation",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1792,
+        -128
+      ],
+      "id": "cb41f294-a9ec-4ce2-ba87-d5790a5ced14",
+      "name": "Prepare Counter Offer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "71464903-383d-41f6-b4e4-316a5b3e3ed9",
+              "name": "offer_status",
+              "value": "rejected",
+              "type": "string"
+            },
+            {
+              "id": "45530410-a715-4aab-b39b-dd7f97b67013",
+              "name": "transaction_stage",
+              "value": "negotiation_closed",
+              "type": "string"
+            },
+            {
+              "id": "ac9e058f-625e-45a7-9fb5-c879d4a87220",
+              "name": "property_status",
+              "value": "available",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1808,
+        112
+      ],
+      "id": "610d3e3f-80cd-4116-b516-811ef9a0b421",
+      "name": "Offer Rejected"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb72fa81-ed37-4f61-947b-684cb12d37bc",
+              "name": "deal_stage",
+              "value": "=={{ $json.transaction_stage || \"negotiation\" }}",
+              "type": "string"
+            },
+            {
+              "id": "098e75f9-ee42-420c-adf3-d561dde93506",
+              "name": "crm_action",
+              "value": "Deal Pipeline Updated",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2048,
+        -208
+      ],
+      "id": "52b0787b-9d71-435b-a31c-d806492fb2f4",
+      "name": "Update CRM Deal"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8a607b1b-e1ee-4933-833c-c5b7363e94d4",
+              "name": "inventory_action",
+              "value": "Property Inventory Updated",
+              "type": "string"
+            },
+            {
+              "id": "bcbaeb92-d0f1-4f79-b761-7a8d54d8a85f",
+              "name": "property_status",
+              "value": "=={{ $json.property_status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2080,
+        48
+      ],
+      "id": "746500e3-ddb1-4bf9-bc42-36fc4e1be64e",
+      "name": "Update Property Status"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "437ff336-c251-4dae-8cdd-4c409e967ba0",
+              "name": "buyer_email",
+              "value": "=={{ $json.buyer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "492bd060-e84d-45a1-a2ce-7a06fe923893",
+              "name": "notification_body",
+              "value": "=={{ $json.offer_status === 'accepted' ? 'Your offer has been accepted!' : ($json.offer_status === 'countered' ? 'The seller has submitted a counter-offer.' : 'Your offer was not accepted.') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2080,
+        288
+      ],
+      "id": "3ef3882a-2045-4121-b908-c2289a70c40a",
+      "name": "Prepare Buyer Notification"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "714bb79f-8693-4a78-bf6f-4768a63cff7d",
+              "name": "slack_message",
+              "value": "=={{ \"Offer Decision Logged: \" + $json.offer_id + \" -> \" + $json.offer_status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2400,
+        224
+      ],
+      "id": "2c7eecd7-f14e-434c-9eac-2a6b8b95a27c",
+      "name": "Agent Decision Notification"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6cfd3eff-5c82-458f-be63-3c20d8d12a11",
+              "name": "transaction_status",
+              "value": "=={{ $json.offer_status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2384,
+        -48
+      ],
+      "id": "381184ac-b4a4-4f10-a6ce-b59e6cc5b7f9",
+      "name": "Update Transaction Status"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6e7dd6a-a045-4169-9b76-b82366063bab",
+              "name": "offer_id",
+              "value": "=={{ $json.offer_id }}",
+              "type": "string"
+            },
+            {
+              "id": "46b054bd-516f-40ca-a4a5-597377bc8530",
+              "name": "property_id",
+              "value": "=={{ $json.property_id }}",
+              "type": "string"
+            },
+            {
+              "id": "68aa2fb0-bfd5-4cea-98ec-36c76d727498",
+              "name": "buyer_id",
+              "value": "=={{ $json.buyer_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a5d5094b-2155-4b11-ad29-430f719151f0",
+              "name": "offer_status",
+              "value": "=={{ $json.offer_status }}",
+              "type": "string"
+            },
+            {
+              "id": "2109cfbd-75d6-42cf-aeaf-8189e5c77843",
+              "name": "transaction_stage",
+              "value": "=={{ $json.transaction_stage }}",
+              "type": "string"
+            },
+            {
+              "id": "91e5af92-387d-455e-a472-dad8be5ae8cf",
+              "name": "next_module",
+              "value": "Document & Contract Automation",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2352,
+        -352
+      ],
+      "id": "ab5200eb-031c-43a5-b3c4-922d434337e6",
+      "name": "Offer Processing Complete"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Offer Received": {
+      "main": [
+        [
+          {
+            "node": "Normalize Offer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Offer Data": {
+      "main": [
+        [
+          {
+            "node": "Validate Offer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Offer Data": {
+      "main": [
+        [
+          {
+            "node": "Offer Data Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Offer Data Complete?": {
+      "main": [
+        [
+          {
+            "node": "AI Offer Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Missing Offer Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing Offer Information": {
+      "main": [
+        [
+          {
+            "node": "Notify Agent - Missing Offer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Offer Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Offer Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Offer Analysis": {
+      "main": [
+        [
+          {
+            "node": "Classify Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Offer": {
+      "main": [
+        [
+          {
+            "node": "Human Negotiation Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Human Negotiation Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Human Negotiation Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Human Negotiation Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Negotiation Review": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Offer Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Counter Offer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Offer Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Counter Offer": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Offer Accepted": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Offer Rejected": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update CRM Deal": {
+      "main": [
+        [
+          {
+            "node": "Update Property Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Property Status": {
+      "main": [
+        [
+          {
+            "node": "Prepare Buyer Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Buyer Notification": {
+      "main": [
+        [
+          {
+            "node": "Agent Decision Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Decision Notification": {
+      "main": [
+        [
+          {
+            "node": "Update Transaction Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Transaction Status": {
+      "main": [
+        [
+          {
+            "node": "Offer Processing Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Offer Processing Complete": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b1d94943-3458-4e4e-9503-1d9f991692b8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "ZKsv1qJnwod9sMhq",
+  "tags": []
+}

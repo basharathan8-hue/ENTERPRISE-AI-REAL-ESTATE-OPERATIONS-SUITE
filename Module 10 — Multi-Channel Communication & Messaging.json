@@ -1,0 +1,495 @@
+{
+  "name": "Module 10 — Multi-Channel Communication & Messaging",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e035db2f-c214-493b-b71b-63405d7ebdb5",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3bd34c0e-59b0-4292-acba-21ec07066daf",
+      "name": "Webhook",
+      "webhookId": "e035db2f-c214-493b-b71b-63405d7ebdb5"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"contactName\": \"={{ $json.body.leadName || $json.leadName || 'Valued Client' }}\",\n  \"email\": \"={{ $json.body.leadEmail || $json.leadEmail || '' }}\",\n  \"phone\": \"={{ $json.body.leadPhone || $json.leadPhone || '' }}\",\n  \"channel\": \"={{ ($json.body.channel || $json.channel || 'email').toLowerCase() }}\",\n  \"messageType\": \"={{ $json.body.messageType || $json.messageType || 'general' }}\",\n  \"propertyAddress\": \"={{ $json.body.property || $json.property || 'Featured Property' }}\",\n  \"appointmentDate\": \"={{ $json.body.appointmentDate || $json.appointmentDate || 'TBD' }}\",\n  \"agentName\": \"={{ $json.body.agentName || $json.agentName || 'Real Estate Team' }}\",\n  \"message\": \"={{ $json.body.message || $json.message || '' }}\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "6530625f-020c-4fa3-a4a2-8d530c3d7528",
+      "name": "Normalize Message"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst refId = 'COMM-' + Date.now().toString(36).toUpperCase();\n\nlet recipient = input.email;\nif (input.channel === 'whatsapp' || input.channel === 'sms') {\n  recipient = input.phone;\n} else if (input.channel === 'staff') {\n  recipient = 'Internal Team';\n}\n\nreturn [{\n  json: {\n    referenceId: refId,\n    recipient: recipient,\n    channel: input.channel || \"email\",\n    messageType: input.messageType || \"general\",\n    contactName: input.contactName || \"Client\",\n    email: input.email || \"\",\n    phone: input.phone || \"\",\n    propertyAddress: input.propertyAddress || \"Property\",\n    appointmentDate: input.appointmentDate || \"TBD\",\n    agentName: input.agentName || \"Agent\",\n    rawMessage: input.message || \"\",\n    priority: (input.messageType || \"\").includes('offer') ? 'HIGH' : 'NORMAL',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "be766dd2-59c0-4253-b93a-1fa49e9f4bd3",
+      "name": "Prepare Communication Payload"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "10b7ee79-3e6d-4e3e-a547-57376a8775bc",
+                    "leftValue": "=={{ $json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "35852543-ee0c-48e3-bf32-76aae8a657a7",
+                    "leftValue": "=={{ $json.channel }}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6ae3871c-4950-4c45-b864-df49f20bfe40",
+                    "leftValue": "=={{ $json.channel }}",
+                    "rightValue": "sms",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sms"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0101369f-5e6c-4c6a-997c-dc4a7e38653a",
+                    "leftValue": "=={{ $json.channel }}",
+                    "rightValue": "staff",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "staff"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        0
+      ],
+      "id": "e992c620-9819-42c3-bfaa-fd966a860130",
+      "name": "Select Communication Channel"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"subject\": \"={{ 'Update regarding ' + $json.propertyAddress + ' [' + $json.messageType.toUpperCase() + ']' }}\",\n  \"body\": \"={{ 'Dear ' + $json.contactName + ',\\n\\n' + ($json.rawMessage || 'Thank you for reaching out regarding ' + $json.propertyAddress + '. Your agent ' + $json.agentName + ' has updated your request for ' + $json.appointmentDate + '.') + '\\n\\nBest Regards,\\n' + $json.agentName }}\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -208
+      ],
+      "id": "cafe39dc-a965-460e-8b0a-e69fc6358f6a",
+      "name": "Email Content"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"delivery_status\": \"SENT\",\n  \"provider\": \"SendGrid / SMTP Stub\",\n  \"channel\": \"email\",\n  \"referenceId\": \"={{ $json.referenceId }}\",\n  \"recipient\": \"={{ $json.email }}\",\n  \"messageType\": \"={{ $json.messageType }}\",\n  \"sent_at\": \"={{ $now.toISOString() }}\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        -208
+      ],
+      "id": "114279cc-6fdd-4c71-bd92-10c44fbb18b5",
+      "name": "Send Email Stub"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"text\": \"={{ 'Hi ' + $json.contactName + '! 👋 Quick update regarding ' + $json.propertyAddress + ': ' + ($json.rawMessage || 'Your ' + $json.messageType + ' is confirmed for ' + $json.appointmentDate + '. Agent: ' + $json.agentName) }}\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -80
+      ],
+      "id": "5312e7b9-a8b1-4809-80ef-950c1c417859",
+      "name": "WhatsApp Content"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"delivery_status\": \"DELIVERED\",\n  \"provider\": \"Meta WhatsApp Business API Stub\",\n  \"channel\": \"whatsapp\",\n  \"referenceId\": \"={{ $json.referenceId }}\",\n  \"recipient\": \"={{ $json.phone }}\",\n  \"messageType\": \"={{ $json.messageType }}\",\n  \"sent_at\": \"={{ $now.toISOString() }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1040,
+        -80
+      ],
+      "id": "00ee2f0a-8d96-4d90-aca0-e87788861514",
+      "name": "WhatsApp Stub"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"text\": \"={{ 'ALERT: ' + $json.contactName + ', update for ' + $json.propertyAddress + ' - ' + $json.messageType + ' scheduled for ' + $json.appointmentDate + '. Info: ' + $json.agentName }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        912,
+        48
+      ],
+      "id": "87b7193c-3ff8-40d1-a42b-ac34c024b921",
+      "name": "SMS Content"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"delivery_status\": \"SENT\",\n  \"provider\": \"Twilio SMS Stub\",\n  \"channel\": \"sms\",\n  \"referenceId\": \"={{ $json.referenceId }}\",\n  \"recipient\": \"={{ $json.phone }}\",\n  \"messageType\": \"={{ $json.messageType }}\",\n  \"sent_at\": \"={{ $now.toISOString() }}\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1040,
+        48
+      ],
+      "id": "35014940-531f-42dc-97eb-759ef77268e4",
+      "name": "SMS Stub"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"alert_payload\": \"={{ '🔔 [STAFF ALERT]\\nPriority: ' + $json.priority + '\\nLead: ' + $json.contactName + '\\nProperty: ' + $json.propertyAddress + '\\nAction: ' + $json.messageType + '\\nNote: ' + ($json.rawMessage || 'Needs agent response') }}\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        912,
+        176
+      ],
+      "id": "a47cbaeb-5567-4a3a-a4ca-ee3af0c1abe5",
+      "name": "Staff Alert Content"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"delivery_status\": \"POSTED\",\n  \"provider\": \"Slack Webhook Stub\",\n  \"channel\": \"staff\",\n  \"referenceId\": \"={{ $json.referenceId }}\",\n  \"recipient\": \"#realestate-alerts\",\n  \"messageType\": \"={{ $json.messageType }}\",\n  \"sent_at\": \"={{ $now.toISOString() }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1040,
+        176
+      ],
+      "id": "96cdbd47-ca2c-4c80-882e-b9b4bb9b49bb",
+      "name": "Slack Notification Stub"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first() ? $input.first().json : {};\n\nif (!input.channel || !input.delivery_status) {\n  return [{\n    json: {\n      success: false,\n      channel: input.channel || \"unknown\",\n      recipient: \"N/A\",\n      messageType: \"N/A\",\n      status: \"unsupported_channel\",\n      error: \"Requested communication channel is not supported or delivery failed.\"\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    channel: input.channel,\n    recipient: input.recipient,\n    messageType: input.messageType,\n    status: input.delivery_status,\n    referenceId: input.referenceId,\n    timestamp: input.sent_at\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        16
+      ],
+      "id": "fd1c7095-616b-4be6-9315-fa0e8b504f91",
+      "name": "Communication Status"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [$input.first()];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        16
+      ],
+      "id": "792a7314-4e5f-4be4-b7aa-8e6d405da3b3",
+      "name": "Communication Result"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Message": {
+      "main": [
+        [
+          {
+            "node": "Prepare Communication Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Communication Payload": {
+      "main": [
+        [
+          {
+            "node": "Select Communication Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Communication Channel": {
+      "main": [
+        [
+          {
+            "node": "Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Staff Alert Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Email Stub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Stub": {
+      "main": [
+        [
+          {
+            "node": "Communication Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Content": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Stub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Stub": {
+      "main": [
+        [
+          {
+            "node": "Communication Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS Content": {
+      "main": [
+        [
+          {
+            "node": "SMS Stub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS Stub": {
+      "main": [
+        [
+          {
+            "node": "Communication Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Staff Alert Content": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification Stub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Notification Stub": {
+      "main": [
+        [
+          {
+            "node": "Communication Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Communication Status": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "26a1d54a-e6a9-49b3-acc1-b0ef203b62fb",
+  "meta": {
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "K5MJfh5Hbzky0OGV",
+  "tags": []
+}

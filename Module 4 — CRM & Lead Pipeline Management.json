@@ -1,0 +1,586 @@
+{
+  "name": "Module 4 — CRM & Lead Pipeline Management",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3c32ada5-c7de-48df-b4c8-e5f6d6500a89",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d95e1a32-5d49-4e83-95c9-f347065bf563",
+              "name": "customer_name",
+              "value": "={{ $json.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f1f95948-611c-4f6f-ad08-c2198ebf3d01",
+              "name": "lead_type",
+              "value": "={{ $json.lead_type }}",
+              "type": "string"
+            },
+            {
+              "id": "5d0cdffc-8c37-4969-9d71-85475451c301",
+              "name": "budget",
+              "value": "={{ $json.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "8e7977e8-d39c-4854-8f2b-f23549c71c6f",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "b4f45616-c87e-46bd-baa8-21f4e5e98e72",
+              "name": "urgency",
+              "value": "={{ $json.urgency }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c34ffa8b-cad8-41d6-ad6b-ce708cf289a8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "\"You are an AI Lead Scoring Engine for an enterprise real estate firm. Analyze the buyer's budget, urgency, and engagement. Return a valid JSON object with keys: 'score' (number 1-100), 'priority' ('High', 'Medium', 'Low'), and 'recommended_action'.\""
+            },
+            {
+              "content": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "0f19ff05-4038-401a-aae0-93d35ccdbb4b",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = $json.output[0].content[0].text;\ntext = text.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet scoreData;\ntry {\n  scoreData = JSON.parse(text);\n} catch(e) {\n  scoreData = { score: 85, priority: \"High\" };\n}\n\nreturn {\n  json: {\n    customer_name: \"John Smith\",\n    lead_score: 95,\n    lead_type: \"Buyer\",\n    budget: \"750000\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "998c95c7-2393-48a6-94cc-b833fc3ce261",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7c3cdec9-5a66-4cbc-ba89-2333e8117674",
+              "leftValue": "={{ $json.lead_score }}",
+              "rightValue": 80,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "7b49dbfc-7a17-4c0a-86ff-6c62afe7056e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const agents = [\"Alex Mercer\", \"Sarah Johnson\", \"David Miller\", \"Emma Watson\"];\nconst randomIndex = Math.floor(Math.random() * agents.length);\nconst assignedAgent = agents[randomIndex];\n\nconst itemData = $json || {};\n\nreturn {\n  json: {\n    ...itemData,\n    assigned_agent: assignedAgent,\n    pipeline_stage: \"Viewing Scheduled\",\n    crm_status: \"Active - Hot Lead\",\n    follow_up_date: \"2026-08-08\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -96
+      ],
+      "id": "44a2fb75-bb90-4649-8c8d-9580af9c21bc",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $json;\n\nreturn {\n  json: {\n    customer_name: item.customer_name || \"Unknown Lead\",\n    lead_type: item.lead_type || \"Buyer\",\n    budget: item.budget || \"0\",\n    city: item.city || \"Not Specified\",\n    property_type: item.property_type || \"General Property\",\n    urgency: item.urgency || \"Medium\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        80
+      ],
+      "id": "28a35c0b-565f-4b4a-bea4-0cf08614dbeb",
+      "name": "Validate Lead Information"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e5a1c68e-3ab1-45f3-b5e0-5fb5d2817564",
+              "name": "assigned_agent",
+              "value": "Unassigned (General Queue)",
+              "type": "string"
+            },
+            {
+              "id": "0a258f5a-6597-44d0-94f0-2114d2ed8fbd",
+              "name": "pipeline_stage",
+              "value": "Nurturing / Warm Lead",
+              "type": "string"
+            },
+            {
+              "id": "31e718b5-7721-4b51-a314-348cbb129e8e",
+              "name": "crm_status",
+              "value": "Active - Cold Lead",
+              "type": "string"
+            },
+            {
+              "id": "23d7f8a0-c164-4cea-ba48-8a03a4954589",
+              "name": "follow_up_date",
+              "value": "2026-08-15",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1280,
+        128
+      ],
+      "id": "add55ac0-9fdf-4b12-96da-4984f5632f34",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Buyer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d6987ef7-7a37-4260-9089-b2b1afa056d5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Buyer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f091921c-aff2-4057-8ca7-058d822853bb",
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Seller",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Seller"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a424d1c3-e08e-4807-987d-c6618cb5a983",
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Investor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Investor"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "100d4cca-e607-4d09-8164-10f550cb06d4",
+                    "leftValue": "={{ $json.lead_type }}",
+                    "rightValue": "Tenant",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tenant"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        -32
+      ],
+      "id": "5694c5ee-8888-4f72-ba45-27e1f01c26d5",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6e7e3dac-5045-49ea-b596-437800bc980e",
+              "name": "customer_name",
+              "value": "={{ $json.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "6cb44eed-4431-4dcc-b828-f52e70659cad",
+              "name": "lead_score",
+              "value": "={{ $json.lead_score }}",
+              "type": "string"
+            },
+            {
+              "id": "cb20a9c1-e745-4d75-b68d-62b54f9f5232",
+              "name": "assigned_agent",
+              "value": "={{ $json.assigned_agent }}",
+              "type": "string"
+            },
+            {
+              "id": "c1829076-4aae-469c-a931-35b364d63014",
+              "name": "pipeline_stage",
+              "value": "={{ $json.pipeline_stage }}",
+              "type": "string"
+            },
+            {
+              "id": "2681fc69-d0e5-4344-9cfa-b20a24777b0e",
+              "name": "crm_status",
+              "value": "={{ $json.crm_status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1696,
+        -16
+      ],
+      "id": "dda64630-0078-430a-af1a-0b62cbd26fbb",
+      "name": "Mock CRM Update"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f56f9a03-e2b5-4433-bea0-e75bb342bf92",
+              "name": "slack_message",
+              "value": "=🚨 Enterprise CRM Update: New Hot Lead Assigned!  👤 Customer: {{ $json.customer_name }} 💰 Budget: ${{ $json.budget }} 🔥 Lead Score: {{ $json.lead_score }}/100 👨‍💼 Assigned Agent: {{ $json.assigned_agent }} 📌 Pipeline Stage: {{ $json.pipeline_stage }} 📅 Follow-up Date: {{ $json.follow_up_date }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1920,
+        -16
+      ],
+      "id": "f32a0897-24b6-4455-bc6a-a00d1c6c6983",
+      "name": "Slack Notification"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2144,
+        -16
+      ],
+      "id": "a2d551da-02b4-4b4a-9f76-4b984467628d",
+      "name": "Execute Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead Information": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Mock CRM Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock CRM Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock CRM Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock CRM Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock CRM Update": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Notification": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ace461a9-e1b7-4ff6-9530-dea3da91d05b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "Q9GOqzDuP8hPx7zw",
+  "tags": []
+}

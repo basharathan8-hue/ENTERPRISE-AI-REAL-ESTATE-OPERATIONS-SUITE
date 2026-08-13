@@ -1,0 +1,904 @@
+{
+  "name": "Module 8 — Document & Contract Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        -64
+      ],
+      "id": "38ee94d3-faed-4050-b381-15bdfa4ef69b",
+      "name": "Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db3a0035-3612-4770-a926-3bce27c10cda",
+              "name": "deal_id",
+              "value": "=={{ $json.deal_id || \"DEAL-8080\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cbb6b6c6-c4a5-4222-86ab-992c48480926",
+              "name": "lead_id",
+              "value": "=={{ $json.lead_id || \"LEAD-101\" }}",
+              "type": "string"
+            },
+            {
+              "id": "09b1cb3d-fe83-4f60-88fa-3e478dc1bd14",
+              "name": "buyer_name",
+              "value": "=={{ $json.buyer_name || \"John Smith\" }}",
+              "type": "string"
+            },
+            {
+              "id": "51ec1ee1-1346-497f-a087-18d2f94b1aef",
+              "name": "buyer_email",
+              "value": "=={{ $json.buyer_email || \"john@example.com\" }}",
+              "type": "string"
+            },
+            {
+              "id": "5f6e1612-90ad-4f9d-aec7-e2d783c2b496",
+              "name": "seller_name",
+              "value": "=={{ $json.seller_name || \"Robert Davis\" }}",
+              "type": "string"
+            },
+            {
+              "id": "91ecc4eb-8dd4-4d6f-889a-2b1f725e023e",
+              "name": "seller_email",
+              "value": "=={{ $json.seller_email || \"robert@example.com\" }}",
+              "type": "string"
+            },
+            {
+              "id": "e6c5c35c-d813-45f5-ac9c-9db260bc6659",
+              "name": "property_id",
+              "value": "=={{ $json.property_id || \"PROP-301\" }}",
+              "type": "string"
+            },
+            {
+              "id": "152fa448-722d-4ecb-b971-392913420b8b",
+              "name": "property_address",
+              "value": "=={{ $json.property_address || \"123 Main Street, Suite 400\" }}",
+              "type": "string"
+            },
+            {
+              "id": "c51662e9-bfd3-4a9f-b7c2-4e33d561c132",
+              "name": "property_price",
+              "value": "=={{ $json.property_price || 500000 }}",
+              "type": "string"
+            },
+            {
+              "id": "8d0ed810-7b9a-4a0e-834e-5527bcd5cb88",
+              "name": "offer_amount",
+              "value": "=={{ $json.offer_amount || 485000 }}",
+              "type": "string"
+            },
+            {
+              "id": "39643e0a-4aab-409d-9e5b-c3a5aab3fa0e",
+              "name": "closing_date",
+              "value": "=={{ $json.closing_date || \"2026-09-30\" }}",
+              "type": "string"
+            },
+            {
+              "id": "fb2cc89d-3908-465d-93c1-6a991ad01289",
+              "name": "agent_name",
+              "value": "=={{ $json.agent_name || \"Sarah Jenkins\" }}",
+              "type": "string"
+            },
+            {
+              "id": "f23af328-b543-448a-902f-fed0b94f078b",
+              "name": "agent_email",
+              "value": "=={{ $json.agent_email || \"sarah.agent@realestate.com\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a9bfd6bd-6d8d-42c7-afc4-7b334e092c83",
+              "name": "document_type",
+              "value": "=={{ $json.document_type || \"Purchase Agreement\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ff0b512e-6ff6-4ac8-8c14-bdd88d9a87fd",
+              "name": "approval_status",
+              "value": "approved",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        80,
+        -64
+      ],
+      "id": "e3484097-96b6-41d3-aa12-602796163447",
+      "name": "Normalize Deal Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "19b79a68-5cc6-4e65-ad95-af2f5bc0157a",
+              "leftValue": "=={{ $json.approval_status }}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        -64
+      ],
+      "id": "188e5c9b-2c86-4d63-9705-7f211b1a259e",
+      "name": "Deal Approved?"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "=={{ $json.document_type }}",
+                    "rightValue": "Purchase Agreement",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "5f94a7f0-a5b7-49f9-ae82-caa47acd8ea9"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Purchase Agreement"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fae1b559-37bb-43cd-8f57-e1114169a29f",
+                    "leftValue": "=={{ $json.document_type }}",
+                    "rightValue": "Offer Letter",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Offer Letter"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8b6a1c4b-2981-4e86-ac5d-e3ba9ff6939b",
+                    "leftValue": "=={{ $json.document_type }}",
+                    "rightValue": "Disclosure Form",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Disclosure Form"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "51ddd1bf-d3ca-4b93-9084-a660896806a6",
+                    "leftValue": "=={{ $json.document_type }}",
+                    "rightValue": "Inspection Document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inspection Document"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8b421420-4c7e-4bb3-954f-ef8037bd1624",
+                    "leftValue": "=={{ $json.document_type }}",
+                    "rightValue": "Closing Document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Closing Document"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        -144
+      ],
+      "id": "2c7f812a-8693-4503-b836-9a8568516f9e",
+      "name": "Document Type Switch"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an Enterprise Real Estate Document Automation AI Engine.\nYour task is to generate structured document drafts based on input deal data.\n\nSTRICT Enterprise Guidelines:\n1. Identify the requested document_type.\n2. Populate all required fields into a clean markdown structure.\n3. Highlight any missing critical details explicitly.\n4. Maintain formal legal-styled real estate contract terminology, BUT DO NOT state or claim that this generated output constitutes binding legal advice or a finalized execution-ready contract without legal review.\n\nRespond STRICTLY in JSON format with the following keys:\n{\n  \"document_title\": \"Title of the document\",\n  \"document_type\": \"Type requested\",\n  \"document_content\": \"Detailed generated markdown draft content...\",\n  \"required_fields\": [\"buyer_name\", \"seller_name\", \"property_address\", \"offer_amount\", \"closing_date\", \"agent_name\"],\n  \"status\": \"DRAFTED\"\n}"
+            },
+            {
+              "content": "=Generate draft for:\nDeal ID: {{ $json.deal_id }}\nType: {{ $json.document_type }}\nBuyer: {{ $json.buyer_name }} ({{ $json.buyer_email }})\nSeller: {{ $json.seller_name }} ({{ $json.seller_email }})\nProperty: {{ $json.property_address }} (ID: {{ $json.property_id }})\nAgreed Price: ${{ $json.offer_amount }}\nClosing Date: {{ $json.closing_date }}\nAgent: {{ $json.agent_name }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        752,
+        -96
+      ],
+      "id": "d686b741-83e7-4e15-959f-3143ac573c61",
+      "name": "AI Document Draft Generator",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse input data from previous nodes\nconst rawAiOutput = $json.message?.content || $json.text || $json;\nlet aiData = {};\n\ntry {\n  aiData = typeof rawAiOutput === 'string' ? JSON.parse(rawAiOutput) : rawAiOutput;\n} catch (e) {\n  aiData = { document_content: String(rawAiOutput) };\n}\n\n// Get original deal data from Node 2\nconst dealData = $('Normalize Deal Data').first().json;\n\n// Mandatory Fields Check\nconst requiredKeys = [\n  'buyer_name',\n  'seller_name',\n  'property_address',\n  'offer_amount',\n  'closing_date',\n  'agent_name'\n];\n\nconst missingFields = [];\n\nrequiredKeys.forEach(field => {\n  if (!dealData[field] || String(dealData[field]).trim() === '') {\n    missingFields.push(field);\n  }\n});\n\nconst isDataValid = missingFields.length === 0;\n\nreturn {\n  json: {\n    ...dealData,\n    document_title: aiData.document_title || `${dealData.document_type} - ${dealData.property_id}`,\n    document_content: aiData.document_content || \"Draft content generated.\",\n    missing_fields: missingFields,\n    validation_status: isDataValid ? \"READY\" : \"NEEDS_REVIEW\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "391e03c5-2103-417e-b31a-36a3791b6f07",
+      "name": "Document Validation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ccb7cef1-edbf-4fa1-91bd-899dead1c1c3",
+              "leftValue": "=={{ $json.validation_status ? $json.validation_status.trim() : \"\" }}",
+              "rightValue": "NEEDS_REVIEW",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1264,
+        -80
+      ],
+      "id": "929053d8-95c4-40be-a22d-e9ef5a5945bf",
+      "name": "Missing Information?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0b53c80c-33aa-4226-a24f-e4960f1158e8",
+              "name": "status",
+              "value": "REJECTED_OR_PENDING",
+              "type": "string"
+            },
+            {
+              "id": "1210dfb8-a5b7-4104-979a-d550aaf86871",
+              "name": "deal_id",
+              "value": "=={{ $json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "122cf065-31f3-4092-abec-20cb9df62556",
+              "name": "message",
+              "value": "Deal is not approved yet. Document generation halted for review.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        272,
+        -256
+      ],
+      "id": "93dc63c4-2643-4096-a318-86aced791af2",
+      "name": "Deal Not Approved Response"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an AI Real Estate Operations Assistant. Draft a polite notification email to the real estate agent listing the missing required fields that must be filled before the contract can be generated."
+            },
+            {
+              "content": "=Deal ID: {{ $json.deal_id }}\nProperty: {{ $json.property_address }}\nMissing Fields List: {{ $json.missing_fields ? $json.missing_fields.join(', ') : 'None' }}\n\nPlease draft a notification to agent {{ $json.agent_name }} asking to update these missing fields."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        -256
+      ],
+      "id": "afcd403a-4a5c-4c6f-8538-2d32671bdcf3",
+      "name": "AI - Draft Missing Field Notice",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "87311454-d51f-4248-9b6f-247628ca6ff9",
+              "name": "document_id",
+              "value": "=={{ \"DOC-\" + Math.floor(100000 + Math.random() * 900000) }}",
+              "type": "string"
+            },
+            {
+              "id": "5f30a20a-5709-4dde-99ae-a388ac4ac5df",
+              "name": "deal_id",
+              "value": "=={{ $json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "11ebae7b-0e03-4571-a43c-ec676e2b67f0",
+              "name": "document_type",
+              "value": "=={{ $json.document_type }}",
+              "type": "string"
+            },
+            {
+              "id": "497124f3-a0b9-4459-a25f-25815ee2608d",
+              "name": "document_title",
+              "value": "=={{ $json.document_title }}",
+              "type": "string"
+            },
+            {
+              "id": "6982861c-f25b-4cc7-9691-5fa1f8cc357d",
+              "name": "version",
+              "value": "1",
+              "type": "string"
+            },
+            {
+              "id": "225306e6-1d64-47c6-b524-504ec359f3a7",
+              "name": "status",
+              "value": "pending_approval",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1488,
+        -64
+      ],
+      "id": "c369f52f-f5c4-49f3-a117-7aea83601c38",
+      "name": "Create Document Package"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4ff9f194-4752-48b3-8eb2-4ede57faf647",
+              "leftValue": "=={{ $json.approval_status.toLowerCase() }}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1712,
+        -64
+      ],
+      "id": "bf2aeca5-d7bb-41e4-ac98-b0f8dba36b76",
+      "name": "Human Approval Gate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f4974117-73e6-4ccd-82c7-ddfca4097b88",
+              "name": "status",
+              "value": "pending_human_signature",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1936,
+        32
+      ],
+      "id": "2f617b34-5db5-445d-93c4-20138d846cfd",
+      "name": "pending signature"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5cda2cde-a359-444a-9c6a-f92068a95f5c",
+              "name": "storage_provider",
+              "value": "Google Drive",
+              "type": "string"
+            },
+            {
+              "id": "6dc67ca1-ea7a-49b0-9da8-ba61914d9428",
+              "name": "target_folder",
+              "value": "=={{ \"Real Estate / Deals / \" + $json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "939370b5-dfc4-48c1-b0d0-05167acb65f4",
+              "name": "file_name",
+              "value": "=={{ $json.document_id + \"_\" + $json.document_type + \".pdf\" }}",
+              "type": "string"
+            },
+            {
+              "id": "9754f390-4b22-491e-8f6c-7701c4a31fdd",
+              "name": "storage_status",
+              "value": "ready_for_upload",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1936,
+        -160
+      ],
+      "id": "9b3c56a3-42b3-462e-a129-d9bdf22c80fd",
+      "name": "Mock Storage Metadata"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e961d96b-0381-4cef-bf19-9fa2f852ee9f",
+              "name": "crm_sync_ready",
+              "value": "true",
+              "type": "string"
+            },
+            {
+              "id": "60fb9a30-5756-4fd5-a068-0f5a825d8540",
+              "name": "deal_id",
+              "value": "=={{ $json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e37a0cc2-9853-4ea9-926f-9b25ec4f4528",
+              "name": "document_id",
+              "value": "=={{ $json.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a70d3acf-037f-40f6-a223-41ce8c482b82",
+              "name": "document_status",
+              "value": "generated_and_approved",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2160,
+        -160
+      ],
+      "id": "b1918fff-d1f3-4a8d-bbc8-8a630ef8ef23",
+      "name": "CRM Update Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an Enterprise Notification Dispatcher. Generate a short summary for email/Slack."
+            },
+            {
+              "content": "=Format update for Deal {{ $json.deal_id }}, Document {{ $json.document_id }} is ready in {{ $json.target_folder }}."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        2384,
+        -160
+      ],
+      "id": "0b2c7fc1-77d4-4d72-a497-3df250a2db02",
+      "name": "Notification Generator",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"deal_id\": \"={{ $json.deal_id }}\",\n  \"document_id\": \"={{ $json.document_id }}\",\n  \"document_status\": \"={{ $json.document_status }}\",\n  \"storage_status\": \"={{ $json.storage_status }}\",\n  \"crm_status\": \"synced_mock\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2752,
+        -160
+      ],
+      "id": "4fd8d6e7-041b-47e2-9814-7ebc132157a1",
+      "name": "Return Sub-workflow Payload"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Deal Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Deal Data": {
+      "main": [
+        [
+          {
+            "node": "Deal Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deal Approved?": {
+      "main": [
+        [
+          {
+            "node": "Document Type Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Deal Not Approved Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Type Switch": {
+      "main": [
+        [
+          {
+            "node": "AI Document Draft Generator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Document Draft Generator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Document Draft Generator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Document Draft Generator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Document Draft Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Document Draft Generator": {
+      "main": [
+        [
+          {
+            "node": "Document Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Validation": {
+      "main": [
+        [
+          {
+            "node": "Missing Information?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing Information?": {
+      "main": [
+        [
+          {
+            "node": "AI - Draft Missing Field Notice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Document Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Document Package": {
+      "main": [
+        [
+          {
+            "node": "Human Approval Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Approval Gate": {
+      "main": [
+        [
+          {
+            "node": "Mock Storage Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "pending signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock Storage Metadata": {
+      "main": [
+        [
+          {
+            "node": "CRM Update Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Update Data": {
+      "main": [
+        [
+          {
+            "node": "Notification Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notification Generator": {
+      "main": [
+        [
+          {
+            "node": "Return Sub-workflow Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "61639df3-2257-474e-a7ee-8e315c6d8f04",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "QcDuXG0bNLzTt8Gh",
+  "tags": []
+}

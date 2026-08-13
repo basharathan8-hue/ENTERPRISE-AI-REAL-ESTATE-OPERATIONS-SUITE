@@ -1,0 +1,636 @@
+{
+  "name": "Module 6 — Property Matching & AI Recommendation Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f0ab2183-6e94-4862-8327-66ad16cc90d4",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9659ae41-15bb-42dd-b5c2-28061226b698",
+              "name": "buyer_name",
+              "value": "=={{ $json.buyer_name || \"James Wilson\" }}",
+              "type": "string"
+            },
+            {
+              "id": "9c1bf0e7-e863-449a-a23b-08e2c8a6541c",
+              "name": "email",
+              "value": "=={{ $json.email || \"james@example.com\" }}",
+              "type": "string"
+            },
+            {
+              "id": "39178299-96b6-4579-8e40-e2ae14d70af1",
+              "name": "phone",
+              "value": "=={{ $json.phone || \"+971501234567\" }}",
+              "type": "string"
+            },
+            {
+              "id": "584d8045-055b-40d1-ad31-7e33c805a9cf",
+              "name": "city",
+              "value": "=={{ $json.city || \"Dubai\" }}",
+              "type": "string"
+            },
+            {
+              "id": "d7ecd98d-9991-4a45-8e32-48777e15c403",
+              "name": "budget_min",
+              "value": "=={{ $json.budget_min || 0 }}",
+              "type": "string"
+            },
+            {
+              "id": "f5a0e457-b963-4fd3-95f3-91072c92c0d2",
+              "name": "budget_max",
+              "value": "=={{ $json.budget_max || 800000 }}",
+              "type": "string"
+            },
+            {
+              "id": "65da74ae-0530-4ffd-add9-c6863dcc9602",
+              "name": "property_type",
+              "value": "=={{ $json.property_type || \"Apartment\" }}",
+              "type": "string"
+            },
+            {
+              "id": "43210c85-eb05-4172-a39b-c6cf677fedb3",
+              "name": "bedrooms",
+              "value": "=={{ $json.bedrooms || 3 }}",
+              "type": "string"
+            },
+            {
+              "id": "9005e296-d411-459f-abbf-c7338e7f9f29",
+              "name": "bathrooms",
+              "value": "=={{ $json.bathrooms || 2 }}",
+              "type": "string"
+            },
+            {
+              "id": "8c9a372e-f68c-480d-a7ab-4f2fd1485519",
+              "name": "min_area",
+              "value": "=={{ $json.min_area || 1500 }}",
+              "type": "string"
+            },
+            {
+              "id": "ddf49bb9-05c7-46d8-b83d-daba36c25839",
+              "name": "purpose",
+              "value": "=={{ $json.purpose || \"Buy\" }}",
+              "type": "string"
+            },
+            {
+              "id": "105032df-896c-4503-88ef-01ecd08158c4",
+              "name": "preferred_features",
+              "value": "=={{ $json.preferred_features || [\"Pool\", \"Parking\", \"Gym\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "bcdbbf03-352c-4bdd-ac7e-91371ccce7e4",
+      "name": "Normalize Buyer Requirements"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json;\nreturn {\n  json: {\n    buyer_name: b.buyer_name || \"Valued Client\",\n    email: b.email || \"client@example.com\",\n    city: b.city || \"Dubai\",\n    budget_min: Number(b.budget_min || 0),\n    budget_max: Number(b.budget_max || 1000000),\n    bedrooms: Number(b.bedrooms || 2),\n    bathrooms: Number(b.bathrooms || 1),\n    property_type: b.property_type || \"Any\",\n    min_area: Number(b.min_area || 0),\n    preferred_features: Array.isArray(b.preferred_features) ? b.preferred_features : [],\n    purpose: b.purpose || \"Buy\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "203b7adc-0245-4d65-9bd9-18582fb1c49a",
+      "name": "Validate Buyer Requirements"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an AI Real Estate Buyer Preference Extraction Engine.\nAnalyze the buyer requirements and return ONLY valid JSON.\n\nExtract and normalize:\n- city\n- property_type\n- budget_min\n- budget_max\n- bedrooms_min\n- bathrooms_min\n- area_min\n- purpose\n- preferred_features (Array)\n- deal_breakers (Array)\n\nReturn JSON only."
+            },
+            {
+              "content": "=={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "97e62fcf-1a22-4c83-a6eb-bfcb72f660a5",
+      "name": "AI Buyer Preference Engine",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FNGo8A7W6g93tKx",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = $json.output?.[0]?.content?.[0]?.text || \"{}\";\ntext = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\nlet result;\ntry {\n  result = JSON.parse(text);\n} catch (error) {\n  result = {\n    city: \"Dubai\",\n    property_type: \"Apartment\",\n    budget_max: 800000,\n    bedrooms_min: 3,\n    bathrooms_min: 2,\n    area_min: 1500,\n    preferred_features: [\"Pool\", \"Parking\", \"Gym\"],\n    deal_breakers: []\n  };\n}\nreturn { json: { ...result } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "906c3d98-6c1f-43a0-a540-eac3ab68e866",
+      "name": "Parse AI Buyer Profile"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { property_id: \"PROP-1001\", property_title: \"Modern Executive Apartment\", city: \"Dubai\", property_type: \"Apartment\", price: 750000, bedrooms: 3, bathrooms: 2, area: 1600, features: [\"Pool\", \"Parking\", \"Gym\"] } },\n  { json: { property_id: \"PROP-1002\", property_title: \"Luxury Palm Villa\", city: \"Dubai\", property_type: \"Villa\", price: 1450000, bedrooms: 4, bathrooms: 4, area: 3200, features: [\"Pool\", \"Garden\", \"Parking\"] } },\n  { json: { property_id: \"PROP-1003\", property_title: \"Cozy Studio Downtown\", city: \"Dubai\", property_type: \"Apartment\", price: 620000, bedrooms: 2, bathrooms: 2, area: 1300, features: [\"Parking\", \"Gym\"] } },\n  { json: { property_id: \"PROP-1004\", property_title: \"Marina Sunset Suite\", city: \"Dubai\", property_type: \"Apartment\", price: 790000, bedrooms: 3, bathrooms: 2, area: 1700, features: [\"Pool\", \"Parking\"] } },\n  { json: { property_id: \"PROP-1005\", property_title: \"Business Bay Highrise\", city: \"Dubai\", property_type: \"Apartment\", price: 820000, bedrooms: 3, bathrooms: 3, area: 1800, features: [\"Gym\", \"Parking\"] } },\n  { json: { property_id: \"PROP-1006\", property_title: \"Jumeirah Beach Residence\", city: \"Dubai\", property_type: \"Apartment\", price: 780000, bedrooms: 3, bathrooms: 2, area: 1550, features: [\"Pool\", \"Parking\", \"Gym\", \"Beach Access\"] } },\n  { json: { property_id: \"PROP-1007\", property_title: \"Suburban Townhouse\", city: \"Abu Dhabi\", property_type: \"Townhouse\", price: 700000, bedrooms: 3, bathrooms: 3, area: 2000, features: [\"Garden\", \"Parking\"] } },\n  { json: { property_id: \"PROP-1008\", property_title: \"Creek Horizon Apartment\", city: \"Dubai\", property_type: \"Apartment\", price: 740000, bedrooms: 3, bathrooms: 2, area: 1500, features: [\"Pool\", \"Gym\"] } },\n  { json: { property_id: \"PROP-1009\", property_title: \"Luxury Penthouse\", city: \"Dubai\", property_type: \"Apartment\", price: 2100000, bedrooms: 4, bathrooms: 4, area: 4000, features: [\"Pool\", \"Parking\", \"Gym\", \"Elevator\"] } },\n  { json: { property_id: \"PROP-1010\", property_title: \"Budget City Flat\", city: \"Dubai\", property_type: \"Apartment\", price: 500000, bedrooms: 1, bathrooms: 1, area: 800, features: [\"Parking\"] } }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "2c365bda-9ab9-4fa1-a4e4-894d06e0504f",
+      "name": "Property Inventory Dataset"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buyer = $('Parse AI Buyer Profile').first().json;\nconst property = $json;\n\n// Hard Filters Check\nif (buyer.city && buyer.city !== \"Any\" && property.city.toLowerCase() !== buyer.city.toLowerCase()) return [];\nif (buyer.property_type && buyer.property_type !== \"Any\" && property.property_type.toLowerCase() !== buyer.property_type.toLowerCase()) return [];\nif (buyer.budget_max && property.price > buyer.budget_max) return [];\nif (buyer.bedrooms_min && property.bedrooms < buyer.bedrooms_min) return [];\n\nreturn { json: { ...property, buyer_name: buyer.buyer_name || \"James Wilson\" } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "fb256bec-a21d-49bb-9449-f80e61f5d4f6",
+      "name": "AI Property Matching Engine"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buyer = $('Parse AI Buyer Profile').first().json;\nconst p = $json;\n\nlet score = 0;\n\n// Price Fit (25 pts)\nif (p.price <= buyer.budget_max) score += 25;\n\n// Property Type (20 pts)\nif (p.property_type.toLowerCase() === buyer.property_type.toLowerCase()) score += 20;\n\n// Bedrooms (15 pts)\nif (p.bedrooms >= (buyer.bedrooms_min || 0)) score += 15;\n\n// Bathrooms (10 pts)\nif (p.bathrooms >= (buyer.bathrooms_min || 0)) score += 10;\n\n// Area (10 pts)\nif (p.area >= (buyer.area_min || 0)) score += 10;\n\n// Preferred Features (15 pts)\nconst prefFeatures = buyer.preferred_features || [];\nif (prefFeatures.length > 0 && p.features) {\n  const matched = prefFeatures.filter(f => p.features.includes(f));\n  score += Math.round((matched.length / prefFeatures.length) * 15);\n}\n\n// Location Fit (5 pts)\nif (p.city.toLowerCase() === (buyer.city || \"\").toLowerCase()) score += 5;\n\nlet match_level = \"Weak Match\";\nif (score >= 90) match_level = \"Excellent Match\";\nelse if (score >= 75) match_level = \"Strong Match\";\nelse if (score >= 60) match_level = \"Good Match\";\n\nreturn {\n  json: {\n    ...p,\n    match_score: score,\n    match_level: match_level\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        0
+      ],
+      "id": "5006e08b-4e73-4a55-8cca-4fc4085e20fe",
+      "name": "Calculate Property Match Score"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        0
+      ],
+      "id": "4236cbc7-01d9-46e3-97ba-8b8ec828999a",
+      "name": "Top 5 Property Recommendations"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "match_score",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        0
+      ],
+      "id": "fffc041f-af57-4f11-bee6-84063169f9d5",
+      "name": "Rank Properties by Match Score"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e4f29cee-d02d-4591-95e5-38d8ca3cd0b9",
+              "leftValue": "match_score",
+              "rightValue": "60",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2384,
+        0
+      ],
+      "id": "6b37a673-4643-44b4-a7d8-2f0d44b60986",
+      "name": "Match Found?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "38acf7be-224b-468b-ae46-596ddb7234dd",
+              "name": "property_id",
+              "value": "=={{ $json.property_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1ed163e2-b6b1-49bb-baf6-1845ad33b0b4",
+              "name": "property_title",
+              "value": "=={{ $json.property_title }}",
+              "type": "string"
+            },
+            {
+              "id": "0925cdef-a0ac-440d-abef-9cf430f0b04c",
+              "name": "property_city",
+              "value": "=={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "c4314403-f6d0-405e-8da0-ad28c3c16d55",
+              "name": "property_price",
+              "value": "=={{ $json.price }}",
+              "type": "string"
+            },
+            {
+              "id": "9c483bea-15f8-4c4f-bcf2-133e76d11488",
+              "name": "match_score",
+              "value": "=={{ $json.match_score }}",
+              "type": "string"
+            },
+            {
+              "id": "8111d333-b8e3-44f4-9f27-60adaaab8a72",
+              "name": "match_level",
+              "value": "=={{ $json.match_level }}",
+              "type": "string"
+            },
+            {
+              "id": "3555dc84-50f3-4cd2-89ec-82fef31112c8",
+              "name": "features",
+              "value": "=={{ $json.features }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2608,
+        -96
+      ],
+      "id": "89c31d07-488a-4292-b844-a09a2cf71a23",
+      "name": "Build Property Recommendations"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62543cdb-e23b-4335-b600-ef454646a4aa",
+              "name": "notification_type",
+              "value": "AI Property Match Alert",
+              "type": "string"
+            },
+            {
+              "id": "a9d554f1-0416-4ed0-b2eb-b242eb83cd51",
+              "name": "message",
+              "value": "Top match identified for James Wilson: PROP-1001 with 94% Match Score.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2832,
+        -96
+      ],
+      "id": "d46819ec-54c5-4401-8af1-c25222e45ad4",
+      "name": "Buyer Match Notification"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ddc49d8-03a9-4f1d-b55e-c069294a073e",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "fff82d4c-ed28-4a08-9df1-bc3b95b48fba",
+              "name": "buyer",
+              "value": "James Wilson",
+              "type": "string"
+            },
+            {
+              "id": "3963a3a2-dfe1-4be6-ac57-d26e55e25086",
+              "name": "top_match",
+              "value": "PROP-1001",
+              "type": "string"
+            },
+            {
+              "id": "2f8b06c2-890d-4135-a5ed-4f9358c95095",
+              "name": "match_score",
+              "value": "94",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3056,
+        -96
+      ],
+      "id": "651a9dfa-7d66-4b9d-8936-dbc35a7b63e0",
+      "name": "Final Property Recommendations"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3280,
+        -96
+      ],
+      "id": "b2d726f1-cc00-43f1-b70f-b5f85e242156",
+      "name": "Execute Workflow (Module 7)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e972fbcc-b8ce-4923-89df-0d980e5d241e",
+              "leftValue": "match_score",
+              "rightValue": "60",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2608,
+        96
+      ],
+      "id": "3c4d9a1b-5c63-467f-a29d-ab4513d53ba3",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Buyer Requirements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Buyer Requirements": {
+      "main": [
+        [
+          {
+            "node": "Validate Buyer Requirements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Buyer Requirements": {
+      "main": [
+        [
+          {
+            "node": "AI Buyer Preference Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Buyer Preference Engine": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Buyer Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Buyer Profile": {
+      "main": [
+        [
+          {
+            "node": "Property Inventory Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Property Inventory Dataset": {
+      "main": [
+        [
+          {
+            "node": "AI Property Matching Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Property Matching Engine": {
+      "main": [
+        [
+          {
+            "node": "Calculate Property Match Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Property Match Score": {
+      "main": [
+        [
+          {
+            "node": "Rank Properties by Match Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rank Properties by Match Score": {
+      "main": [
+        [
+          {
+            "node": "Top 5 Property Recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 5 Property Recommendations": {
+      "main": [
+        [
+          {
+            "node": "Match Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Found?": {
+      "main": [
+        [
+          {
+            "node": "Build Property Recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Property Recommendations": {
+      "main": [
+        [
+          {
+            "node": "Buyer Match Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buyer Match Notification": {
+      "main": [
+        [
+          {
+            "node": "Final Property Recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Property Recommendations": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow (Module 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0958c82b-b537-4d59-b532-78a4a2b636c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "TYAF7kELt4KzRVAI",
+  "tags": []
+}

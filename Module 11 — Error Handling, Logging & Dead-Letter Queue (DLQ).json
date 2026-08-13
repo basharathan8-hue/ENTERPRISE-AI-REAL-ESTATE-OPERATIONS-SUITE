@@ -1,0 +1,923 @@
+{
+  "name": "Module 11 — Error Handling, Logging & Dead-Letter Queue (DLQ)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2d0f10ec-6c34-4372-abcc-55326542a28d",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4dbae6c3-4b99-460d-869f-06f9c09d630b",
+              "name": "error_message",
+              "value": "=={{ $json.execution.error.message || $json.message || 'Unknown execution error occurred' }}",
+              "type": "string"
+            },
+            {
+              "id": "1b5f0ae8-af5d-4feb-87a2-0da9eca6917a",
+              "name": "workflow_name",
+              "value": "=={{ $json.workflow.name || 'Enterprise Real Estate Workflow' }}",
+              "type": "string"
+            },
+            {
+              "id": "b05ac293-bfe4-4c20-aa9b-5f88049e533f",
+              "name": "workflow_id",
+              "value": "=={{ $json.workflow.id || 'wf_unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "0e73ee54-b9b9-41b8-a666-3aed601579db",
+              "name": "execution_id",
+              "value": "=={{ $json.execution.id || 'exec_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "b6b6f46f-f725-485f-bc43-7f7ebabb68ff",
+              "name": "node_name",
+              "value": "=={{ $json.execution.error.node.name || $json.node.name || 'Unknown Node' }}",
+              "type": "string"
+            },
+            {
+              "id": "b0676733-16f8-42c4-a6f9-9e44faff7605",
+              "name": "timestamp",
+              "value": "=={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "04d4ef28-290b-4bb3-8e60-ddd7d5df17fa",
+              "name": "error_status",
+              "value": "FAILED",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "acee1951-96a1-47fd-bfdf-0bc45c3efd87",
+      "name": "Normalize Error"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Generate Unique Error ID\nconst dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');\nconst randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();\nconst errorId = `ERR-${dateStr}-REAL-${randomHash}`;\n\nreturn [{\n  json: {\n    error_id: errorId,\n    error_message: input.error_message,\n    workflow_name: input.workflow_name,\n    workflow_id: input.workflow_id,\n    execution_id: input.execution_id,\n    node_name: input.node_name,\n    timestamp: input.timestamp,\n    retry_count: 0,\n    source: \"n8n_core\",\n    status: \"OPEN\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "2924d0c8-3b3f-4050-a9bf-be64eaa4f7ef",
+      "name": "Generate Error ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst msg = (input.error_message || '').toLowerCase();\nconst node = (input.node_name || '').toLowerCase();\n\nlet severity = 'MEDIUM';\nlet error_type = 'SYSTEM_ERROR';\nlet retryable = true;\nlet likely_cause = 'Unexpected system execution error';\nlet recommended_action = 'Review workflow execution logs';\n\n// Enterprise Classification Logic\nif (msg.includes('crm') || msg.includes('database') || msg.includes('booking') || node.includes('payment')) {\n  severity = 'CRITICAL';\n  error_type = 'CRITICAL_SYSTEM_FAILURE';\n  retryable = false;\n  likely_cause = 'Core database, CRM, or Booking gateway failure';\n  recommended_action = 'Escalate immediately to Ops Lead & System Admin';\n} else if (msg.includes('404') || msg.includes('auth') || msg.includes('unauthorized') || msg.includes('syntax')) {\n  severity = 'HIGH';\n  error_type = 'CONFIG_OR_AUTH_ERROR';\n  retryable = false;\n  likely_cause = 'API credentials expired or endpoint path changed';\n  recommended_action = 'Verify API credentials and payload structure';\n} else if (msg.includes('timeout') || msg.includes('500') || msg.includes('503') || msg.includes('rate limit')) {\n  severity = 'HIGH';\n  error_type = 'TRANSIENT_API_FAILURE';\n  retryable = true;\n  likely_cause = 'External service temporarily overloaded or offline';\n  recommended_action = 'Execute retry sequence with exponential backoff';\n} else if (msg.includes('format') || msg.includes('validation')) {\n  severity = 'LOW';\n  error_type = 'DATA_VALIDATION_WARNING';\n  retryable = false;\n  likely_cause = 'Incoming lead provided missing or malformed fields';\n  recommended_action = 'Log to audit record and monitor trend';\n}\n\nreturn [{\n  json: {\n    ...input,\n    ai_classification: {\n      error_type: error_type,\n      severity: severity,\n      retryable: retryable,\n      likely_cause: likely_cause,\n      recommended_action: recommended_action\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "b3ec92de-9277-485d-9faa-aa9ef48f888f",
+      "name": "AI Error Classifier"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e6c99790-762f-4d5d-8591-478f16937b47",
+              "name": "error_id",
+              "value": "=={{ $json.error_id }}",
+              "type": "string"
+            },
+            {
+              "id": "eef835f2-f27a-4297-bbfa-d5cc6079654e",
+              "name": "timestamp",
+              "value": "=={{ $json.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "cc2717a7-9609-4b28-90dc-fa23f7fcd2e9",
+              "name": "workflow_name",
+              "value": "=={{ $json.workflow_name }}",
+              "type": "string"
+            },
+            {
+              "id": "c345cd9f-b2f9-42b3-923a-b47742d228ba",
+              "name": "execution_id",
+              "value": "=={{ $json.execution_id }}",
+              "type": "string"
+            },
+            {
+              "id": "69545683-09bc-4146-b998-f157645574bc",
+              "name": "node_name",
+              "value": "=={{ $json.node_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f1d30699-6014-4368-bef8-be887f342760",
+              "name": "error_message",
+              "value": "=={{ $json.error_message }}",
+              "type": "string"
+            },
+            {
+              "id": "35e856a9-054e-4ce6-9d48-7751bfe80b18",
+              "name": "error_type",
+              "value": "=={{ $json.ai_classification.error_type }}",
+              "type": "string"
+            },
+            {
+              "id": "fd7f4564-0b17-41d3-ac88-5d9cb86e4cff",
+              "name": "severity",
+              "value": "=={{ $json.ai_classification.severity }}",
+              "type": "string"
+            },
+            {
+              "id": "a8fc62e9-0bc5-4e97-8aed-b29064eb0653",
+              "name": "retryable",
+              "value": "=={{ $json.ai_classification.retryable }}",
+              "type": "string"
+            },
+            {
+              "id": "4868de45-2efa-4b31-a27c-1be710b0f071",
+              "name": "likely_cause",
+              "value": "=={{ $json.ai_classification.likely_cause }}",
+              "type": "string"
+            },
+            {
+              "id": "6a76db65-3a25-44a5-839d-036ec16e4554",
+              "name": "recommended_action",
+              "value": "=={{ $json.ai_classification.recommended_action }}",
+              "type": "string"
+            },
+            {
+              "id": "185b6067-5501-45d0-a6bb-b7af5c18298b",
+              "name": "retry_count",
+              "value": "=={{ $json.retry_count }}",
+              "type": "string"
+            },
+            {
+              "id": "63f4bca9-d896-4f31-9826-61d2e910873d",
+              "name": "status",
+              "value": "=={{ $json.status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        800,
+        0
+      ],
+      "id": "241abe3a-bbd8-4a90-9c0a-497c49d94872",
+      "name": "error_id"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "=={{ $json.severity }}",
+                    "rightValue": "CRITICAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "5f65e0ab-b5b8-49a7-8511-8a2c24ec10a8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CRITICAL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cbebd791-4ed9-4dd2-a15d-388a52423042",
+                    "leftValue": "=={{ $json.severity }}",
+                    "rightValue": "HIGH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HIGH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a4aea99c-cc1d-4468-ab98-85494c954928",
+                    "leftValue": "=={{ $json.severity }}",
+                    "rightValue": "MEDIUM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "MEDIUM"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4dc30d7e-e527-4725-8597-92b4240970bf",
+                    "leftValue": "=={{ $json.severity }}",
+                    "rightValue": "LOW",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "LOW"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "871cca4b-d58c-4f2b-a006-ce7c7ef76d19",
+      "name": "Severity Router"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7962859e-12b5-467e-9744-d60dea0e563d",
+              "name": "alert_message",
+              "value": "=🚨 CRITICAL AUTOMATION ERROR DETECTED  Error ID: {{ $json.error_id }} Workflow: {{ $json.workflow_name }} Failed Node: {{ $json.node_name }} Issue: {{ $json.error_message }}  Likely Cause: {{ $json.likely_cause }} Recommended Action: {{ $json.recommended_action }} Timestamp: {{ $json.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1136,
+        -208
+      ],
+      "id": "af960e9c-541b-4617-ab1e-0517bd3724ef",
+      "name": "Critical Alert"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$input.first().json, notification_sent: true, channel: \"#ops-critical-alerts\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        -208
+      ],
+      "id": "7fd71860-1929-41d2-96ab-2c74b969d79a",
+      "name": "Slack Notification Stub"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6129b9f3-c055-4326-be07-ad2b12f1eb6f",
+              "leftValue": "=={{ $json.retryable }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        -48
+      ],
+      "id": "ccbb9dac-7fc4-41ad-b43a-1ba6934c8598",
+      "name": "Is Retryable?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        -64
+      ],
+      "id": "25a7d6f2-e34e-4fdd-a524-11fc94d07377",
+      "name": "Wait",
+      "webhookId": "8b4e2e4f-b963-40ef-a7d1-5817e17f5a0a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\n// Increment retry counter\nitem.retry_count = (item.retry_count || 0) + 1;\nitem.status = `RETRY_ATTEMPT_${item.retry_count}`;\n\nreturn [{ json: item }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        -64
+      ],
+      "id": "48eeda86-e97f-4191-850e-146567c914ad",
+      "name": "Increment Retry Counter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5a6781bf-909f-4421-acdb-13605f719075",
+              "leftValue": {},
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1872,
+        -64
+      ],
+      "id": "c672f5a8-06ad-4d1a-bf08-7326d0c73a77",
+      "name": "Check Max Retries"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a639b36d-65f5-4da5-bef6-019bf0825598",
+              "name": "dlq_id",
+              "value": "=={{ 'DLQ-REAL-' + Math.floor(1000 + Math.random() * 9000) }}",
+              "type": "string"
+            },
+            {
+              "id": "62e4e6e4-867c-4286-b37e-0d583d2b0824",
+              "name": "error_id",
+              "value": "=={{ $json.error_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5d0c1e61-0c94-4c17-a1e5-a506dc65e559",
+              "name": "workflow_name",
+              "value": "=={{ $json.workflow_name }}",
+              "type": "string"
+            },
+            {
+              "id": "fb207555-0067-4884-9447-964247dccfe9",
+              "name": "execution_id",
+              "value": "=={{ $json.execution_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3cfa8dca-7f12-407b-9a1d-54c3f826103a",
+              "name": "node_name",
+              "value": "=={{ $json.node_name }}",
+              "type": "string"
+            },
+            {
+              "id": "34669786-9052-4b35-87e1-aa5055b25d80",
+              "name": "error_type",
+              "value": "=={{ $json.error_type }}",
+              "type": "string"
+            },
+            {
+              "id": "3dc5192d-4304-4754-85ab-a20e9f57c8ab",
+              "name": "severity",
+              "value": "=={{ $json.severity }}",
+              "type": "string"
+            },
+            {
+              "id": "80a98c3f-d632-4b4c-acb1-3269f43b4ba0",
+              "name": "error_message",
+              "value": "=={{ $json.error_message }}",
+              "type": "string"
+            },
+            {
+              "id": "6db65738-2192-40f7-ba18-ea92cdf6497e",
+              "name": "retry_count",
+              "value": "=={{ $json.retry_count }}",
+              "type": "string"
+            },
+            {
+              "id": "cf2899d6-1b31-4213-8b88-bf49066ab919",
+              "name": "status",
+              "value": "UNRESOLVED",
+              "type": "string"
+            },
+            {
+              "id": "c7cd1b31-c950-4cb8-ab93-9fb4b7be6afc",
+              "name": "created_at",
+              "value": "=={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "3fec2697-7b9d-48f0-95cb-6b7dfd13765a",
+              "name": "resolution",
+              "value": "Pending Manual Review",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1840,
+        272
+      ],
+      "id": "bda6057d-a65b-4f69-86ed-231d57f3a188",
+      "name": "Create DLQ Record"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f3bb76b-9ebb-4583-9574-fd8af3686f70",
+              "name": "staff_notice",
+              "value": "==⚠️ MEDIUM ERROR: {{ $json.error_id }} in {{ $json.workflow_name }}. Logged to DLQ for end-of-day review.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1312,
+        80
+      ],
+      "id": "947a9c20-e64e-4f81-a3dc-b36967b89493",
+      "name": "Staff Medium Alert"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e225662-e0e2-4b6c-b330-bb9c7a6e2b26",
+              "name": "monitored_status",
+              "value": "MONITORED_AND_RESOLVED",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1264,
+        272
+      ],
+      "id": "389c460f-8549-4604-b520-af3e887e1b28",
+      "name": "Mark Monitored"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "60b6d2f5-4f7e-4ee9-aec0-5d1f145b75c4",
+              "name": "log_id",
+              "value": "=={{ 'LOG-' + Math.floor(10000 + Math.random() * 90000) }}",
+              "type": "string"
+            },
+            {
+              "id": "c33e2999-37f4-4cff-9b72-23019b2e85d1",
+              "name": "timestamp",
+              "value": "=={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "9501a6a7-4c6b-4b07-b88d-4e5100d65572",
+              "name": "workflow_name",
+              "value": "=={{ $json.workflow_name }}",
+              "type": "string"
+            },
+            {
+              "id": "0cf76f59-b6e5-4d00-886f-d2254eb50800",
+              "name": "event_type",
+              "value": "ERROR_CAPTURED",
+              "type": "string"
+            },
+            {
+              "id": "552b863c-293a-4424-ac31-ce0fa7f15013",
+              "name": "severity",
+              "value": "=={{ $json.severity }}",
+              "type": "string"
+            },
+            {
+              "id": "0070bc73-9f1d-4813-a1b2-a8103c069f59",
+              "name": "error_id",
+              "value": "=={{ $json.error_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1689eec1-1a68-41ad-9e17-1039016dcb0b",
+              "name": "execution_id",
+              "value": "=={{ $json.execution_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e7b94701-1000-4add-90f7-f0dc010cfe5a",
+              "name": "action_taken",
+              "value": "=={{ $json.severity === 'CRITICAL' ? 'ALERT_AND_DLQ' : ($json.retry_count > 0 ? 'RETRIED_THEN_DLQ' : 'LOGGED') }}",
+              "type": "string"
+            },
+            {
+              "id": "b56bb9b3-2005-43a0-8174-d1d38e699e42",
+              "name": "retry_count",
+              "value": "=={{ $json.retry_count || 0 }}",
+              "type": "string"
+            },
+            {
+              "id": "186df429-ac9f-4bfd-adc0-5145c555ee07",
+              "name": "status",
+              "value": "=={{ $json.status || 'OPEN' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1488,
+        272
+      ],
+      "id": "62dbeb68-5e99-47e6-93d4-47414783d572",
+      "name": "Create Audit Log"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "874678fc-9395-47f6-afd6-3810b1832842",
+              "name": "summary_message",
+              "value": "=={{ '⚠️ Real Estate Automation Alert\\n\\nSeverity: ' + $json.severity + '\\nError ID: ' + $json.error_id + '\\nWorkflow: ' + $json.workflow_name + '\\nFailed Node: ' + $json.node_name + '\\nRetries Attempted: ' + $json.retry_count + '\\nStatus: Moved to DLQ\\n\\nAction: Manual investigation required.' }}",
+              "type": "string"
+            },
+            {
+              "id": "089048a8-ce88-4d67-bdfc-ddf7391ec8e6",
+              "name": "alert_status",
+              "value": "DISPATCHED_TO_OPS_CHANNEL",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2144,
+        128
+      ],
+      "id": "0cb06105-a80e-4667-8dcf-fdc078ef9419",
+      "name": "Ops Alert"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Error": {
+      "main": [
+        [
+          {
+            "node": "Generate Error ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Error ID": {
+      "main": [
+        [
+          {
+            "node": "AI Error Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Error Classifier": {
+      "main": [
+        [
+          {
+            "node": "error_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "error_id": {
+      "main": [
+        [
+          {
+            "node": "Severity Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Severity Router": {
+      "main": [
+        [
+          {
+            "node": "Critical Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Retryable?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Staff Medium Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Monitored",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critical Alert": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification Stub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Retryable?": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create DLQ Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Increment Retry Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Increment Retry Counter": {
+      "main": [
+        [
+          {
+            "node": "Check Max Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Notification Stub": {
+      "main": [
+        [
+          {
+            "node": "Create DLQ Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Max Retries": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create DLQ Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Staff Medium Alert": {
+      "main": [
+        [
+          {
+            "node": "Create DLQ Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Monitored": {
+      "main": [
+        [
+          {
+            "node": "Create Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create DLQ Record": {
+      "main": [
+        [
+          {
+            "node": "Create Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Audit Log": {
+      "main": [
+        [
+          {
+            "node": "Ops Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ops Alert": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a9d2abf5-adb5-463c-894d-c73071aa8fbd",
+  "meta": {
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "CNCjuaJt7pTRmHcQ",
+  "tags": []
+}

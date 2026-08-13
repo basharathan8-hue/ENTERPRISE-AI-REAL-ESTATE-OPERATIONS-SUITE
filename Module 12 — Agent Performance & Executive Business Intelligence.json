@@ -1,0 +1,524 @@
+{
+  "name": "Module 12 — Agent Performance & Executive Business Intelligence",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "02cad13a-a0e0-4208-b1a0-214073800af2",
+      "name": "Start Executive BI"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7ca576b-5b5c-459f-889d-019f09ff1d56",
+              "name": "agents_data",
+              "value": "[{\"agent_name\":\"Agent A\",\"leads_received\":42,\"qualified_leads\":31,\"viewings_booked\":18,\"viewings_completed\":15,\"offers_received\":8,\"deals_closed\":4,\"followups_completed\":35,\"response_time_minutes\":12,\"revenue_generated\":28000},{\"agent_name\":\"Agent B\",\"leads_received\":38,\"qualified_leads\":24,\"viewings_booked\":15,\"viewings_completed\":10,\"offers_received\":5,\"deals_closed\":2,\"followups_completed\":21,\"response_time_minutes\":28,\"revenue_generated\":14000},{\"agent_name\":\"Agent C\",\"leads_received\":45,\"qualified_leads\":34,\"viewings_booked\":22,\"viewings_completed\":20,\"offers_received\":10,\"deals_closed\":6,\"followups_completed\":41,\"response_time_minutes\":8,\"revenue_generated\":42000}]",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2e054c05-9c7f-49db-b2f2-41bae7d74984",
+      "name": "Sample Business Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nlet agents = input.agents_data || [];\n\n// Fix: Convert string to actual Array if n8n passed it as text\nif (typeof agents === 'string') {\n  try {\n    agents = JSON.parse(agents);\n  } catch (e) {\n    agents = [];\n  }\n}\n\nconst calculatedAgents = agents.map(agent => {\n  const leadConvRate = ((agent.deals_closed / agent.leads_received) * 100).toFixed(1);\n  const qualRate = ((agent.qualified_leads / agent.leads_received) * 100).toFixed(1);\n  const viewingConvRate = ((agent.viewings_completed / agent.viewings_booked) * 100).toFixed(1);\n  const offerConvRate = ((agent.deals_closed / agent.offers_received) * 100).toFixed(1);\n  const avgRevPerDeal = agent.deals_closed > 0 ? Math.round(agent.revenue_generated / agent.deals_closed) : 0;\n\n  return {\n    agent_name: agent.agent_name,\n    leads_received: agent.leads_received,\n    deals_closed: agent.deals_closed,\n    revenue_generated: agent.revenue_generated,\n    response_time_minutes: agent.response_time_minutes,\n    metrics: {\n      lead_conversion_rate_pct: parseFloat(leadConvRate),\n      qualification_rate_pct: parseFloat(qualRate),\n      viewing_completion_rate_pct: parseFloat(viewingConvRate),\n      offer_closing_rate_pct: parseFloat(offerConvRate),\n      avg_revenue_per_deal: avgRevPerDeal\n    }\n  };\n});\n\nreturn [{ json: { agent_metrics: calculatedAgents } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "45eb4496-b2c8-4659-90cb-e45f7df09799",
+      "name": "Calculate Agent Metrics"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst agents = input.agent_metrics || [];\n\nlet totalLeads = 0;\nlet totalDeals = 0;\nlet totalRevenue = 0;\nlet totalResponseTime = 0;\n\nagents.forEach(a => {\n  totalLeads += a.leads_received;\n  totalDeals += a.deals_closed;\n  totalRevenue += a.revenue_generated;\n  totalResponseTime += a.response_time_minutes;\n});\n\nconst agentCount = agents.length;\nconst overallConvRate = ((totalDeals / totalLeads) * 100).toFixed(1);\nconst avgResponseTime = (totalResponseTime / agentCount).toFixed(1);\nconst avgRevPerDeal = totalDeals > 0 ? Math.round(totalRevenue / totalDeals) : 0;\n\nreturn [{\n  json: {\n    ...input,\n    company_kpis: {\n      total_leads: totalLeads,\n      total_deals_closed: totalDeals,\n      total_revenue: totalRevenue,\n      overall_conversion_rate_pct: parseFloat(overallConvRate),\n      avg_company_response_time_min: parseFloat(avgResponseTime),\n      avg_revenue_per_deal: avgRevPerDeal,\n      agent_count: agentCount\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "7a60809f-d01d-4305-89d3-5e7f99164454",
+      "name": "Calculate Business KPIs"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst agents = input.agent_metrics || [];\nconst kpis = input.company_kpis || {};\n\n// Sort agents by revenue\nconst sorted = [...agents].sort((a, b) => b.revenue_generated - a.revenue_generated);\nconst topAgent = sorted[0].agent_name;\nconst lowestAgent = sorted[sorted.length - 1].agent_name;\n\nlet status = 'EXCELLENT';\nif (kpis.overall_conversion_rate_pct < 8) status = 'CRITICAL';\nelse if (kpis.avg_company_response_time_min > 20) status = 'ATTENTION';\n\nreturn [{\n  json: {\n    ...input,\n    ai_insights: {\n      overall_status: status,\n      top_performing_agent: topAgent,\n      lowest_performing_agent: lowestAgent,\n      strongest_kpi: \"High Qualified Lead Ratio (Agent C - 75.5%)\",\n      weakest_kpi: \"Response Time Lag (Agent B - 28 mins)\",\n      conversion_bottleneck: \"Follow-up delays during initial lead response window\",\n      revenue_opportunity: \"Coaching Agent B on instant response can add ~15k revenue\",\n      recommended_actions: [\n        \"Automate instant SMS triggers for Agent B leads\",\n        \"Reward Agent C for top deal conversion strategy\",\n        \"Implement 15-minute SLA for new inquiry assignments\"\n      ]\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "23a91345-b71e-45fa-baac-ce25ef143934",
+      "name": "AI Executive Performance Analyst"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bac270b9-6ed7-4d48-ad6f-0445d1347e2b",
+              "name": "report_id",
+              "value": "=={{ 'REP-BI-' + Math.floor(1000 + Math.random() * 9000) }}",
+              "type": "string"
+            },
+            {
+              "id": "280c1036-5cc8-40de-8b22-ee964215c12f",
+              "name": "report_date",
+              "value": "=={{ new Date().toISOString().slice(0, 10) }}",
+              "type": "string"
+            },
+            {
+              "id": "f298c3b3-10c0-45bf-8cfd-f44681a43900",
+              "name": "overall_status",
+              "value": "=={{ $json.ai_insights.overall_status }}",
+              "type": "string"
+            },
+            {
+              "id": "b6d00d7b-bcae-48f0-ac10-605129b85a25",
+              "name": "top_agent",
+              "value": "=={{ $json.ai_insights.top_performing_agent }}",
+              "type": "string"
+            },
+            {
+              "id": "6946bb59-b8df-4a48-9e5f-13bde7316c4a",
+              "name": "lowest_agent",
+              "value": "=={{ $json.ai_insights.lowest_performing_agent }}",
+              "type": "string"
+            },
+            {
+              "id": "13ddcefa-4f4c-48c9-afd3-92b9f577740a",
+              "name": "strongest_kpi",
+              "value": "=={{ $json.ai_insights.strongest_kpi }}",
+              "type": "string"
+            },
+            {
+              "id": "be182afe-91b0-408e-93ca-dce418f0df1a",
+              "name": "weakest_kpi",
+              "value": "=={{ $json.ai_insights.weakest_kpi }}",
+              "type": "string"
+            },
+            {
+              "id": "029a0c06-1857-49db-ae31-b1db39b2af1c",
+              "name": "key_insight",
+              "value": "=={{ $json.ai_insights.revenue_opportunity }}",
+              "type": "string"
+            },
+            {
+              "id": "6a593dec-04ca-4522-9aed-acba15e02779",
+              "name": "total_revenue",
+              "value": "=={{ $json.company_kpis.total_revenue }}",
+              "type": "string"
+            },
+            {
+              "id": "4f536875-1cfe-41a2-af47-e869d3d950e9",
+              "name": "deals_closed",
+              "value": "=={{ $json.company_kpis.total_deals_closed }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        0
+      ],
+      "id": "87c5998d-bb39-489b-bb70-23541558fb97",
+      "name": "Executive Summary"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "=={{ $json.overall_status }}",
+                    "rightValue": "EXCELLENT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "e6167843-effb-477b-b4ab-2fdbbce6d881"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "EXCELLENT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fb748139-cc1e-4357-9349-ebddad470a1a",
+                    "leftValue": "=={{ $json.overall_status }}",
+                    "rightValue": "ATTENTION",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ATTENTION"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "794f64e6-c12c-4aec-9ce6-c53d7615d922",
+                    "leftValue": "=={{ $json.overall_status }}",
+                    "rightValue": "CRITICAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CRITICAL"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        0
+      ],
+      "id": "c0fe4314-8d18-48cf-9ab2-7e2361d964e6",
+      "name": "Performance Status Router"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d3d6144a-8600-464a-9bf4-e770d7dd95be",
+              "name": "exec_message",
+              "value": "=🟢 BUSINESS PERFORMANCE — EXCELLENT  Top Agent: {{ $json.top_agent }} Total Revenue: ${{ $json.total_revenue }} Deals Closed: {{ $json.deals_closed }} Key Insight: {{ $json.key_insight }}  Recommendation: Continue current operating strategy & reward top performers.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1520,
+        -112
+      ],
+      "id": "7996fa63-8906-4c6f-a558-c8e26791679b",
+      "name": "Performance Summary"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79331068-ae96-4217-9f2b-f4e89874ec1a",
+              "name": "exec_message",
+              "value": "=🟡 MANAGEMENT ATTENTION REQUIRED  Performance requires operational adjustment. Weakest KPI: {{ $json.weakest_kpi }} Lowest Performer: {{ $json.lowest_agent }}  Recommended Action: Implement SLA notifications & team lead coaching session.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1520,
+        32
+      ],
+      "id": "51804b0f-7591-4f5e-8cd1-aedb95b51ad6",
+      "name": "Improvement Alert"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89ec6018-c3ee-48b5-b6a4-ad99fb090b67",
+              "name": "exec_message",
+              "value": "🔴 CRITICAL BUSINESS PERFORMANCE ALERT  Overall Status: CRITICAL Major Issue: Revenue drop / Lead conversion bottleneck detected. Business Impact: Target shortfall likely.  Immediate Action: Reassign stagnant leads and trigger urgent sales meeting.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1520,
+        176
+      ],
+      "id": "001ffef6-e291-4b61-b993-e6308e00de33",
+      "name": "Critical Business Alert"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a53289a1-a5ae-4533-99b3-57bdbb78c23b",
+              "name": "full_report",
+              "value": "=EXECUTIVE REAL ESTATE PERFORMANCE REPORT Period: Weekly Audit Business Status: {{ $json.overall_status }}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ BUSINESS KPIs Total Leads: {{ $('Calculate Business KPIs').item.json.company_kpis.total_leads }} Deals Closed: {{ $json.deals_closed }} Total Revenue: ${{ $json.total_revenue }} Avg Response Time: {{ $('Calculate Business KPIs').item.json.company_kpis.avg_company_response_time_min }} mins  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ AGENT PERFORMANCE Top Performer: {{ $json.top_agent }} Lowest Performer: {{ $json.lowest_agent }}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ AI INSIGHTS & ACTIONS Opportunity: {{ $json.key_insight }} Weakest KPI: {{ $json.weakest_kpi }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1776,
+        48
+      ],
+      "id": "932ceb7a-5547-4f34-a34f-7550c38d9b07",
+      "name": "Executive Report"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b246b374-0cc7-4f53-90f1-c95c252c9d8f",
+              "name": "alert_status",
+              "value": "DISPATCHED_TO_EXECUTIVE_SLACK",
+              "type": "string"
+            },
+            {
+              "id": "e7d75742-af4e-4edd-8449-020d37ffc5bb",
+              "name": "summary",
+              "value": "=={{ '📊 EXECUTIVE BI UPDATE\\nReal Estate Operations\\nPerformance: ' + $json.overall_status + '\\nRevenue: $' + $json.total_revenue + '\\nDeals Closed: ' + $json.deals_closed + '\\nTop Agent: ' + $json.top_agent + '\\nPriority Opportunity: ' + $json.key_insight }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2000,
+        48
+      ],
+      "id": "2c5379c0-72ec-44d4-92b0-f9ba24d1bc2d",
+      "name": "Executive Management Alert"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Executive BI": {
+      "main": [
+        [
+          {
+            "node": "Sample Business Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Business Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Agent Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Agent Metrics": {
+      "main": [
+        [
+          {
+            "node": "Calculate Business KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Business KPIs": {
+      "main": [
+        [
+          {
+            "node": "AI Executive Performance Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Executive Performance Analyst": {
+      "main": [
+        [
+          {
+            "node": "Executive Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Summary": {
+      "main": [
+        [
+          {
+            "node": "Performance Status Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Performance Status Router": {
+      "main": [
+        [
+          {
+            "node": "Performance Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Improvement Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Critical Business Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Performance Summary": {
+      "main": [
+        [
+          {
+            "node": "Executive Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Improvement Alert": {
+      "main": [
+        [
+          {
+            "node": "Executive Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critical Business Alert": {
+      "main": [
+        [
+          {
+            "node": "Executive Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executive Report": {
+      "main": [
+        [
+          {
+            "node": "Executive Management Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "97b36730-3399-4af4-8d6a-24fa84bcf58e",
+  "meta": {
+    "instanceId": "907093fe6017de175907fcc4956ac3cd695e026687d898d3ee15d292484f42ee"
+  },
+  "nodeGroups": [],
+  "id": "KTlGjC3p8FEDyei2",
+  "tags": []
+}
