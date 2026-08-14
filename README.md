@@ -59,8 +59,7 @@ The suite is built around a modular enterprise automation architecture.
 
 ### 📌 ARCHITECTURE DIAGRAM — INSERT HERE
 
-**[INSERT YOUR ENTERPRISE AI REAL ESTATE ARCHITECTURE DIAGRAM HERE]**
-
+![Architecture Diagram](architecture.png)
 *High-level architecture showing the relationship between the 12 operational modules, AI/LLM layer, integrations, data flow, and reliability layer.*
 
 ---
@@ -90,8 +89,7 @@ The system is designed around the complete operational journey of a real estate 
 
 ### 📌 WORKFLOW DIAGRAM — INSERT HERE
 
-**[INSERT YOUR COMPLETE END-TO-END WORKFLOW DIAGRAM HERE]**
-
+![workflow Diagram](workflow.png)
 *The complete business flow from lead intake through property operations, transactions, communication, analytics, and executive intelligence.*
 
 ### Core Flow
