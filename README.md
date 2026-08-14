@@ -1,22 +1,52 @@
-<div box=center># 🏢 Enterprise AI Real Estate Operations Suite
+<div align="center">
+
+# 🏢 Enterprise AI Real Estate Operations Suite
 
 ### Enterprise AI Automation Platform for Modern Real Estate Businesses
 
-An intelligent, modular automation system designed to streamline the complete real estate operational journey — from lead acquisition and property matching to offers, contracts, communication, analytics, and executive intelligence.
+<p>
+An intelligent, modular automation system designed to streamline the complete
+real estate operational journey — from lead acquisition and property matching
+to offers, contracts, communication, analytics, and executive intelligence.
+</p>
 
-![Enterprise AI Real Estate Operations Suite](docs/assets/real-estate-cover.png)
+<br>
 
-![Status](https://img.shields.io/badge/STATUS-COMPLETED-16A34A?style=for-the-badge)
-![Modules](https://img.shields.io/badge/MODULES-12-2563EB?style=for-the-badge)
-![Architecture](https://img.shields.io/badge/ARCHITECTURE-MODULAR-7C3AED?style=for-the-badge)
-![Platform](https://img.shields.io/badge/PLATFORM-n8n-EA580C?style=for-the-badge)
+<img src="docs/assets/real-estate-cover.png" width="90%" alt="Enterprise AI Real Estate Operations Suite">
 
-| n8n | AI / LLM | AI Agents | APIs | CRM | Webhooks |
-|---|---|---|---|---|---|
-| Automation | Intelligence | Decision Support | Integrations | Operations | Connectivity |
+<br><br>
+
+<table>
+<tr>
+<td align="center"><b>n8n</b></td>
+<td align="center"><b>AI / LLM</b></td>
+<td align="center"><b>AI Agents</b></td>
+<td align="center"><b>APIs</b></td>
+<td align="center"><b>CRM</b></td>
+<td align="center"><b>Webhooks</b></td>
+</tr>
+<tr>
+<td align="center">Automation</td>
+<td align="center">Intelligence</td>
+<td align="center">Decision Support</td>
+<td align="center">Integrations</td>
+<td align="center">Operations</td>
+<td align="center">Connectivity</td>
+</tr>
+</table>
+
+<br>
+
+<img src="https://img.shields.io/badge/STATUS-COMPLETED-16A34A?style=for-the-badge">
+<img src="https://img.shields.io/badge/MODULES-12-2563EB?style=for-the-badge">
+<img src="https://img.shields.io/badge/ARCHITECTURE-MODULAR-7C3AED?style=for-the-badge">
+<img src="https://img.shields.io/badge/PLATFORM-n8n-EA580C?style=for-the-badge">
+
+</div>
+
 
 ---
-</div>
+
 ## 🎯 Overview
 
 Real estate operations are rarely limited by a lack of software. The bigger challenge is **fragmentation**.
