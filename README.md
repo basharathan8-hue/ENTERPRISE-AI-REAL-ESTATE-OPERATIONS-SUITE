@@ -135,7 +135,7 @@ This creates a practical approach to AI automation rather than a collection of d
 
 The architecture separates business logic into specialized modules while maintaining structured data flow between them — keeping the system **modular, maintainable, testable, integration-ready, extensible**, and easier to debug and adapt to different real estate organizations.
 
-![Technical Architecture](docs/architecture/enterprise-real-estate-architecture.png)
+![Technical Architecture](architecture.png)
 
 ### 🔄 End-to-End Workflow
 
@@ -143,7 +143,7 @@ The architecture separates business logic into specialized modules while maintai
 
 The workflow is divided into specialized automation modules rather than one oversized workflow, so each capability can be developed, tested, monitored, and improved independently.
 
-![Complete Workflow](docs/architecture/enterprise-real-estate-workflow.png)
+![Complete Workflow](workflow.png)
 
 ---
 
@@ -248,12 +248,16 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Faster response. Better qualification. Less manual intake.
 
+![AI Lead Intake and Receptionist](docs/screenshots/module-01.png)
+
 ### 02 — Smart Property Matching Engine
 **Purpose:** Connect buyer requirements with relevant property inventory by comparing structured prospect requirements against available property information.
 
 **Core capabilities:** Requirement analysis · Property filtering · Criteria matching · Match scoring · Candidate property selection · Structured recommendations
 
 **Business value:** Reduce manual property searching and improve the speed of matching prospects with relevant inventory.
+
+![Smart Property Matching Engine](docs/screenshots/module-02.png)
 
 ### 03 — Property Viewing & Appointment Scheduling
 **Purpose:** Automate the coordination required to move an interested prospect from property discovery to an actual viewing.
@@ -268,6 +272,8 @@ The core business workflows stay modular so external services can be connected w
 **Core capabilities:** Lead record management · Pipeline stage updates · Lead status tracking · Qualification data synchronization · Opportunity management · Structured CRM-ready records
 
 **Business value:** Give real estate teams a consistent operational view of their prospects and opportunities.
+
+![CRM and Lead Pipeline Management](docs/screenshots/module-04.png)
 
 ### 05 — Property Listing & Inventory Management
 **Purpose:** Create a structured automation layer for property inventory.
@@ -290,12 +296,16 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Create a more structured process around offers and reduce manual coordination during negotiations.
 
+![Offer and Negotiation Management](docs/screenshots/module-07.png)
+
 ### 08 — Document & Contract Automation
 **Purpose:** Automate the operational workflow surrounding transaction documents and contracts.
 
 **Core capabilities:** Document intake · Data extraction · Document validation · Transaction information mapping · Approval routing · Contract workflow coordination · Document status tracking
 
 **Business value:** Reduce repetitive document handling while improving process consistency and visibility.
+
+![Document and Contract Automation](docs/screenshots/module-08.png)
 
 ### 09 — Analytics & Business Dashboard
 **Purpose:** Transform operational workflow data into measurable business information.
@@ -324,6 +334,8 @@ The core business workflows stay modular so external services can be connected w
 **Core capabilities:** Agent performance metrics · Activity analysis · Pipeline performance · Conversion indicators · Operational KPI aggregation · Executive reporting · Business intelligence outputs
 
 **Business value:** Give leadership a higher-level view of how the real estate operation is performing.
+
+![Agent Performance and Executive Business Intelligence](docs/screenshots/module-12.png)
 
 ---
 
