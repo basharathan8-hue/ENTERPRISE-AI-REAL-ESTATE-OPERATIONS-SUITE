@@ -262,7 +262,9 @@ The platform follows a modular architecture in which each major business respons
 │                 Executive Reporting                           │
 └──────────────────────────────────────────────────────────────┘
 
+</div>
 
+<div>
 
 📐 Technical Architecture
 
@@ -415,4 +417,41 @@ Workflow Testing	✅ Completed
 Built to demonstrate how AI automation can become an operational layer for a real estate business.
 
 </div> ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
