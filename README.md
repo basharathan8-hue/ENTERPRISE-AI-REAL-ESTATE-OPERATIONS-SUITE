@@ -1,4 +1,4 @@
-# 🏢 Enterprise AI Real Estate Operations Suite
+<div box=center># 🏢 Enterprise AI Real Estate Operations Suite
 
 ### Enterprise AI Automation Platform for Modern Real Estate Businesses
 
@@ -16,7 +16,7 @@ An intelligent, modular automation system designed to streamline the complete re
 | Automation | Intelligence | Decision Support | Integrations | Operations | Connectivity |
 
 ---
-
+</div>
 ## 🎯 Overview
 
 Real estate operations are rarely limited by a lack of software. The bigger challenge is **fragmentation**.
