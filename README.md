@@ -12,7 +12,7 @@ to offers, contracts, communication, analytics, and executive intelligence.
 
 <br>
 
-<img src="docs/assets/real-estate-cover.png" width="90%" alt="Enterprise AI Real Estate Operations Suite">
+<img src="real-estate-cover.png" width="90%" alt="Enterprise AI Real Estate Operations Suite">
 
 <br><br>
 
@@ -278,7 +278,7 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Faster response. Better qualification. Less manual intake.
 
-![AI Lead Intake and Receptionist](docs/screenshots/module-01.png)
+![Enterprise AI Real Estate Operations Suite](./Enterprise%20Real%20Estate%20AI%20Lead%20Intake%20&%20Receptionist.png)
 
 ### 02 — Smart Property Matching Engine
 **Purpose:** Connect buyer requirements with relevant property inventory by comparing structured prospect requirements against available property information.
@@ -287,7 +287,7 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Reduce manual property searching and improve the speed of matching prospects with relevant inventory.
 
-![Smart Property Matching Engine](docs/screenshots/module-02.png)
+![Smart Property Matching Engine](./Smart%20property%20matching%20engine.png)
 
 ### 03 — Property Viewing & Appointment Scheduling
 **Purpose:** Automate the coordination required to move an interested prospect from property discovery to an actual viewing.
@@ -303,7 +303,7 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Give real estate teams a consistent operational view of their prospects and opportunities.
 
-![CRM and Lead Pipeline Management](docs/screenshots/module-04.png)
+![CRM and Lead Pipeline Management](./CRM%20&%20Lead%20Pipeline%20Management.png)
 
 ### 05 — Property Listing & Inventory Management
 **Purpose:** Create a structured automation layer for property inventory.
@@ -312,12 +312,18 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Improve data consistency and reduce manual property inventory administration.
 
+![Property Listing & Inventory Management](./Property%20Listing%20&%20Inventory%20Management.png)
+
+
 ### 06 — Property Matching & AI Recommendation Engine
 **Purpose:** Introduce an AI-powered recommendation layer into the property discovery process, evaluating structured requirements to generate property recommendations.
 
 **Core capabilities:** Buyer requirement analysis · Property comparison · AI-assisted ranking · Recommendation generation · Match explanation · Structured recommendation output
 
 **Business value:** Move from simple property filtering toward intelligent property recommendations.
+
+![Property Matching & AI Recommendation Engine](./Property%20Matching%20&%20AI%20Recommendation%20Engine.png)
+
 
 ### 07 — Offer & Negotiation Management
 **Purpose:** Support one of the most commercially important stages of the real estate journey — the offer and negotiation process.
@@ -326,7 +332,7 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Create a more structured process around offers and reduce manual coordination during negotiations.
 
-![Offer and Negotiation Management](docs/screenshots/module-07.png)
+![Offer and Negotiation Management](./OFFER%20&%20NEGOTIATION%20MANAGEMENT.png)
 
 ### 08 — Document & Contract Automation
 **Purpose:** Automate the operational workflow surrounding transaction documents and contracts.
@@ -335,7 +341,7 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Reduce repetitive document handling while improving process consistency and visibility.
 
-![Document and Contract Automation](docs/screenshots/module-08.png)
+![Document and Contract Automation](./Document%20&%20Contract%20Automation.png)
 
 ### 09 — Analytics & Business Dashboard
 **Purpose:** Transform operational workflow data into measurable business information.
