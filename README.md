@@ -371,7 +371,7 @@ The core business workflows stay modular so external services can be connected w
 
 **Business value:** Give leadership a higher-level view of how the real estate operation is performing.
 
-![Agent Performance and Executive Business Intelligence](docs/screenshots/module-12.png)
+![Agent Performance and Executive Business Intelligence](./Agent%20Performance%20&%20Executive%20Business%20Intelligence.png)
 
 ---
 
